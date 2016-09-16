@@ -1,25 +1,36 @@
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+// Framework express
+const express = require('express');
+// Módulo path (Nativo de NodeJS)
+const path = require('path');
+// favicon
+const favicon = require('serve-favicon');
+// un logger de peticiones
+const logger = require('morgan');
+// Necesario para parsears las cookies
+const cookieParser = require('cookie-parser');
+// Necesario para parsear el cuerpo de la petición
+const bodyParser = require('body-parser');
+// librería passport
+const passport = require('passport');
+// librería express-session
+const expressSession = require('express-session');
 
-var routes = require('./routes/index');
-var users = require('./routes/users');
+// Rutas de la aplicación
+const routes = require('./routes/index');
+const users = require('./routes/users');
 
-var app = express();
+// Objeto app express
+const app = express();
 
 //app.enable('trust proxy');
+const http = require('http');
 
-var os = require('os');
-
-console.log(os.networkInterfaces());
-
-// view engine setup
+// Motor de vistas
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
+// Da seguridad a nuestra aplicación express
+app.use(require('helmet')());
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
@@ -28,12 +39,24 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Configuración passport
+
+//Primero usamos la propia sesión de express
+app.use(expressSession({secret: 'mySecretKey', resave : true, saveUninitialized : true}));
+app.use(passport.initialize());
+// Luego las sesiones de passport
+app.use(passport.session());
+// Pasamos el objeto passport para pasarle las estrategias de autenticación y registro
+require('./passport')(passport);
+
+app.set('trust proxy', true) // specify a single subnet
+
 app.use('/', routes);
-app.use('/users', users);
+app.use('/usuarios', users);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  var err = new Error('Not Found');
+  let err = new Error('Not Found');
   err.status = 404;
   next(err);
 });
@@ -61,6 +84,5 @@ app.use(function(err, req, res, next) {
     error: {}
   });
 });
-
 
 module.exports = app;

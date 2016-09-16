@@ -1,7 +1,0 @@
-var db = require('.');
-
-console.log('Creando la tabla de usuarios...');
-db.users.create()
-.then( ()=>{
-	console.log('Tabla de usuarios creada');
-})

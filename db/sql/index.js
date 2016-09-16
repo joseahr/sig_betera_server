@@ -51,7 +51,12 @@ module.exports = {
         empty: sql('users/empty.sql'),
         init: sql('users/init.sql'),
         drop: sql('users/drop.sql'),
-        add: sql('users/add.sql')
+        add: sql('users/add.sql'),
+        createCitextExtension: sql('users/extension_citext.sql'),
+        findBy: sql('users/find_by.sql')
+    },
+    raster : {
+        perfil : sql('raster/perfil.sql')
     }
 };
 

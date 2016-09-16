@@ -1,4 +1,76 @@
 extends layout
 
+block link
+	link(rel="stylesheet" href="/javascripts/ol3/ol.css")
+	link(rel="stylesheet" href="/javascripts/ol3-ext/control/profilcontrol.css")
+	link(rel="stylesheet" href="/stylesheets/style.css")
 block content
-	h1 Hello world
+	#map
+block script
+	script(src="/javascripts/ol3/ol-debug.js")
+	script(src="/javascripts/ol3-ext/interaction/drawregularinteraction.js")
+	script(src="/javascripts/ol3-ext/control/profilcontrol.js")
+	script(src="/javascripts/proj4js/dist/proj4.js")
+	script(src="/javascripts/ol-utils/projs.js")
+	script.
+		//Mapa base del IGN
+		console.log(proyecciones['25830']);
+		var ignBase = new ol.layer.Tile({
+			name: 'IGN Base',
+			visible: true,
+			source: new ol.source.TileWMS({
+				url: 'http://www.ign.es/wms-inspire/ign-base',
+				params: {'FORMAT': 'image/jpeg', 
+						'VERSION': '1.1.1',
+						transparent : false,
+						tiled : true, 
+						LAYERS: 'IGNBaseTodo',
+						STYLES: '',
+				}
+			})
+		});
+
+		//Ortofoto PNOA
+		var ortoPNOA = new ol.layer.Tile({
+			name: 'Ortofoto PNOA',
+			visible: false,
+			source: new ol.source.TileWMS({
+				url: 'http://www.ign.es/wms-inspire/pnoa-ma',
+				crossOrigin: 'anonymous',
+				params: {'FORMAT': 'image/png', 
+						'VERSION': '1.1.1',
+						tiled: true,
+						LAYERS: 'OI.OrthoimageCoverage',
+						STYLES: '',
+				}
+			})
+		});
+
+		var layerVectorVacia = new ol.layer.Vector({
+			title:'Vacía',
+			name: 'base'
+		});
+
+		var groupCapasBase = new ol.layer.Group({
+			name: 'Capas Base',
+			layers: [layerVectorVacia, ignBase, ortoPNOA]
+		});
+
+		var mousePositionControl = new ol.control.MousePosition({
+			coordinateFormat : ol.coordinate.createStringXY(2)
+		});
+		var map = new ol.Map({
+			layers 	: [
+				groupCapasBase
+			],
+			target 	: 'map',
+			controls: ol.control.defaults({ attribution : false }).extend([mousePositionControl]),
+			view 	: new ol.View({
+				projection: proyecciones['25830'],
+				zoom 	  : 5,
+				center 	  : [727300.000, 4384800.000]
+			})
+		});
+
+		map.getLayers().forEach(group => group.getLayers().forEach(layer => console.log(layer.get('name'))));
+		console.log('proooj', map.getView().getProjection());

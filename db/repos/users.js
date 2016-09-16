@@ -1,6 +1,10 @@
 'use strict';
 
-var sql = require('../sql').users;
+const sql = require('../sql').users;
+
+const bluebird = require('bluebird');
+const bcrypt = require('bcrypt');
+const compare = bluebird.promisify(bcrypt.compare);
 
 module.exports = (rep, pgp) => {
 
@@ -10,18 +14,24 @@ module.exports = (rep, pgp) => {
      */
 
     return {
+        validPassword: (user, password) =>
+            compare(password, user.password),
+
+        findBy: (column, value) =>
+            rep.any(sql.findBy, {
+                column: pgp.as.name(column),
+                value: pgp.as.value(value)
+            }),
 
         // Creates the table;
         create: () =>
             rep.none(sql.create),
 
-        // Initializes the table with some user records, and return their id-s;
-        //
-        // When we execute more than one insert, we should use a transaction, although
-        // in this particular example we use a single concatenated insert, so a transaction
-        // isn't really needed. It is here just as an example.
-        //
-        // Also, giving names to your tasks and transactions is a reliable way to track their errors.
+        // Crea la extensión "citext"(Case Insensitive text) para poder utilizar este tipo de dato en la columna e-mail
+        // http://dba.stackexchange.com/a/74313
+        createCitextExtension : ()=> 
+            rep.none(sql.createCitextExtension),
+
         init: () =>
             rep.tx('Demo-Users', t => t.map(sql.init, null, row => row.id)),
 

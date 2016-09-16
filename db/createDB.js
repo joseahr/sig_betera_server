@@ -1,7 +1,11 @@
-var db = require('.').db;
+const db = require('.').db;
 
 console.log('Creando la tabla de usuarios...');
-db.users.create()
+db.users.createCitextExtension()
+.then( ()=>{
+	console.log('Extensión citext creada.');
+	return db.users.create();
+}, error => console.log(`Error al crear extensión citext: ${error}`))
 .then( ()=>{
 	console.log('Tabla de usuarios creada');
 })

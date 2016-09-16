@@ -3,16 +3,21 @@
 // Bluebird is the best promise library available today,
 // and is the one recommended here:
 const  promiseLib   = require('bluebird');
+
+// Repositorios
 const users         = require('./repos/users');
+const raster        = require('./repos/raster');
+// repositorio "capas" TODO
 
 // Loading all the database repositories separately,
 // because event 'extend' is called multiple times:
-var repos = {
-    users
+const repos = {
+    users,
+    raster
 };
 
 // pg-promise initialization options:
-var options = {
+const options = {
 
     // Use a custom promise library, instead of the default ES6 Promise:
     promiseLib,
@@ -24,12 +29,13 @@ var options = {
         // 2. We pass in `pgp` in case it is needed when implementing the repository;
         //    for example, to access namespaces `.as` or `.helpers`
         obj.users = repos.users(obj, pgp);
+        obj.raster = repos.raster(obj, pgp);
     }
 
 };
 
 // Database connection parameters:
-var config = {
+const config = {
     host: 'localhost',
     port: 5432,
     database: 'betera-test',
@@ -38,13 +44,13 @@ var config = {
 };
 
 // Load and initialize pg-promise:
-var pgp = require('pg-promise')(options);
+const pgp = require('pg-promise')(options);
 
 // Create the database instance:
-var db = pgp(config);
+const db = pgp(config);
 
 // Load and initialize all the diagnostics:
-var diag = require('./diagnostics');
+const diag = require('./diagnostics');
 diag.init(options);
 
 // If you ever need to change the default pool size, here's an example:
@@ -60,3 +66,9 @@ module.exports = {
     // within any application.
     db
 };
+
+/********* TEST *********/
+// 'LINESTRING (712397 4394802,712450 4394800)'
+//db.raster.getProfile('LINESTRING (712397 4394802,712450 4394800)')
+//.then(console.log.bind(console))
+//.catch(console.error.bind(console));
