@@ -4,3 +4,27 @@ html, body, #map {
   margin : 0;
   padding : 0;
 }
+
+.ol-mouse-position-custom {
+  color :#fff;
+}
+
+.coords-scale-container{
+  background : rgba(0,0,0, 0.5);
+  padding : 0.3em;
+}
+
+/* Hide info for profil on map */
+/*.ol-control.ol-profil table
+{	display: none;
+}
+*/
+/* Customize cursor color*/
+/*.options .ol-profilbar, .options .ol-profilcursor::before
+{	background-color: blue;
+}
+*/
+
+.loading-active {
+  visibility : hidden;
+}

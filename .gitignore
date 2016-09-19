@@ -35,3 +35,5 @@ typings/*
 #Databse Logs
 db/errors.log
 
+#Config
+config/*

@@ -35,13 +35,7 @@ const options = {
 };
 
 // Database connection parameters:
-const config = {
-    host: 'localhost',
-    port: 5432,
-    database: 'betera-test',
-    user: 'postgres',
-    password : 'postgres'
-};
+const config = require('../config').db;
 
 // Load and initialize pg-promise:
 const pgp = require('pg-promise')(options);

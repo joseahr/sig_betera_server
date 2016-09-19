@@ -18,6 +18,7 @@ const expressSession = require('express-session');
 // Rutas de la aplicación
 const routes = require('./routes/index');
 const users = require('./routes/users');
+const raster = require('./routes/raster');
 
 // Objeto app express
 const app = express();
@@ -53,6 +54,7 @@ app.set('trust proxy', true) // specify a single subnet
 
 app.use('/', routes);
 app.use('/usuarios', users);
+app.use('/raster', raster)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

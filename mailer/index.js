@@ -4,7 +4,8 @@ const nodemailer = require('nodemailer');
 const bluebird = require('bluebird');
 
 // create reusable transporter object using the default SMTP transport
-const transporter = nodemailer.createTransport('smtps://joherro123%40gmail.com:321%3AHermo@smtp.gmail.com');
+const urlTransport = require('../config').mailer;
+const transporter = nodemailer.createTransport(urlTransport);
 
 // Nombre del destinatario
 const from = '"SIG Bétera 👥" <topografo@betera.es>';
