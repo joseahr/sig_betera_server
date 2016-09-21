@@ -2,12 +2,8 @@ const express   = require('express');
 const router    = express.Router();
 const passport  = require('passport');
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
-
 router.post('/login', (req, res)=>{
+  console.log(req.body.username, req.body.password);
   // Comprobamos que req.body.username && req.body.password existan
   if(!req.body.username || !req.body.password)
     return res.status(400).json('Faltan credenciales de acceso');
@@ -28,6 +24,13 @@ router.post('/login', (req, res)=>{
   // llamamos a la función middleware que devuelve passport.authenticate() 
   // con los parámetros req y res
   })(req, res);
+});
+
+router.get('/logout', (req, res)=>{
+  if(!req.user)
+    return res.status(404).json('No hay usuario en la sesión');
+  req.logout();
+  res.status(200).json('Cerraste sesión');
 });
 
 module.exports = router;

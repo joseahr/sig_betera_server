@@ -57,6 +57,16 @@ module.exports = {
     },
     raster : {
         perfil : sql('raster/perfil.sql')
+    },
+    layers : {
+        create : sql('layers/create.sql'),
+        schema : sql('layers/info-schema.sql'),
+        getLayerAsGeoJSON : sql('layers/as-geojson.sql')
+    },
+    roles : {
+        create : sql('roles/create.sql'),
+        createEnum : sql('roles/type-enum.sql'),
+        getLayerNamesByPerms : sql('roles/user-layers.sql')
     }
 };
 

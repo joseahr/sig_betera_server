@@ -6,12 +6,7 @@ html, body, #map {
 }
 
 .ol-mouse-position-custom {
-  color :#fff;
-}
-
-.coords-scale-container{
-  background : rgba(0,0,0, 0.5);
-  padding : 0.3em;
+  color :#000;
 }
 
 /* Hide info for profil on map */
@@ -27,4 +22,26 @@ html, body, #map {
 
 .loading-active {
   visibility : hidden;
+}
+
+.font-size-1{
+  font-size: 0.75em;
+}
+
+.padding-1{
+  padding : 0.15em;
+}
+
+.btn {
+  width : 100%;
+}
+
+.ol-scale-line {
+    left:auto;
+    right: 0.5;
+}
+
+.coords-scale-container {
+  visibility : hidden;
+  pointer-events: none;
 }

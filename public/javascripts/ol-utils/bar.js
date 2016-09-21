@@ -136,6 +136,7 @@ editbar.addControl(
         ]
     }) 
 );
+
 // Prevent null objects on finishDrawing
 vector.getSource().on('addfeature', function(e){	
     switch (e.feature.getGeometry().getType()){	

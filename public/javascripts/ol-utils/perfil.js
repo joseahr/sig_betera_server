@@ -1,19 +1,95 @@
 /* Depende de bar.js y map.js*/
 
+$('#download-perfil').bind('click', function(){
+    download(profile.getImage(), 'perfil.png');
+    //window.open(profile.getImage().replace("image/png", "image/octet-stream"));
+});
+
+$('#download-perfil-geojson').bind('click', function(){
+    var parser = new ol.format.GeoJSON();
+    var geojson = parser.writeFeature(profileFeature);
+    var dataStr = "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(geojson));
+    download(dataStr, 'perfil.json');
+    //window.open(dataStr);
+});
+
+function download(data, fileName){
+    var a = document.createElement('a');
+    a.href = data;    
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);   
+}
+
 // Variable perfil
 var profile;
+
+// Almacena la feature del Perfil para hacer un set geometry
+var profileFeature;
 
 // Capa que almacenará el lineString del perfil dibujado
 var vectorDibujarPerfil = new ol.layer.Vector( { source: new ol.source.Vector() });
 
+// Estilo del lineString
+var styleLineStringZ = [	
+    new ol.style.Style({	
+        stroke: new ol.style.Stroke({	
+            color: [251,140,0],
+            width: 3,
+            lineDash: [.5, 10]
+        })
+    })
+];
+
+var stylePointPerfil = [
+    new ol.style.Style({
+        image : new ol.style.FontSymbol({	
+            form: 'marker',
+            gradient: false,
+            glyph: 'fa-map-marker', 
+            fontSize: 0,
+            radius: 16, 
+            //offsetX: -15,
+            rotation: 0,
+            rotateWithView: true,
+            offsetY: -17,
+            color: '#00bbff',
+            fill: new ol.style.Fill(
+            {	color: '#fff'
+            }),
+            stroke: new ol.style.Stroke(
+            {	color: '#00bbff',
+                width: 1,
+            })
+        }),
+        stroke: new ol.style.Stroke(
+        {	width: 2,
+            color: '#f80'
+        }),
+        fill: new ol.style.Fill(
+        {	color: [255, 136, 0, 0.6]
+        })
+    })
+];
+
 // Control en la barra principal
 var controlPerfil = new ol.control.Toggle({	
     html: '<i class="fa fa-area-chart"></i>',
-    title: "Perfil",
     interaction : new ol.interaction.Draw({	
         type: 'LineString',
         source: vectorDibujarPerfil.getSource()
-    })
+    }),
+    onToggle : function(){
+        vectorProfile.getSource().clear();
+        vectorProfile.getSource().changed();
+        $('#modal-perfil').closeModal();
+    },
+    tooltip : {
+        text : 'Herramienta de perfil',
+        delay : 50,
+        position : 'right'
+    }
 });
 
 // Vector layer, almacenará el lineStringZ
@@ -24,30 +100,10 @@ var sourceProfile = new ol.source.Vector({
 
 var vectorProfile = new ol.layer.Vector({	
     source: sourceProfile,
-    style: style
+    style: styleLineStringZ
 });
 // Añadimos al mapa
 map.addLayer(vectorProfile);
-
-// Estilo del lineString
-var style = [	
-    new ol.style.Style({	
-        image: new ol.style.RegularShape({	
-            radius: 10,
-            radius2: 5,
-            points: 5,
-            fill: new ol.style.Fill({ color: 'blue' })
-        }),
-        stroke: new ol.style.Stroke({	
-            color: [0,0,255],
-            width: 2
-        }),
-        fill: new ol.style.Fill({	
-            color: [0,0,255,0.3]
-        })
-    })
-];
-
 
 // Lo añadimos a la barra principal
 mainbar.addControl (controlPerfil,    
@@ -55,18 +111,19 @@ mainbar.addControl (controlPerfil,
     new ol.control.Bar({	
         controls:[ 
             new ol.control.Toggle({	
-                html: 'undo',//'<i class="fa fa-mail-reply"></i>',
-                title: "Delete last point",
+                html: '<i class="fa fa-mail-reply"></i>',
+                title: "Eliminar punto anterior",
                 className: "noToggle ol-text-button",
-                onToggle: function(){	
-                    controlPerfil.getInteraction().removeLastPoint();
+                onToggle: function(){
+                    var interaction = controlPerfil.getInteraction();
+                    interaction.removeLastPoint();
                 }
             }),
             new ol.control.Toggle({	
-                html: 'Finish',
-                title: "finish",
+                html: 'Fin',
+                title: "Finalizar el perfil",
                 className: "noToggle ol-text-button",
-                onToggle: function(){	
+                onToggle: function(){
                     controlPerfil.getInteraction().finishDrawing();
                 }
             })
@@ -76,6 +133,8 @@ mainbar.addControl (controlPerfil,
 
 // Cuando acabemos de dibujar el lineString en el mapa
 controlPerfil.getInteraction().on('drawend', function(e){
+    if(!e.feature.getGeometry().getLength())
+        return Materialize.toast('Debe dibujar un perfil',  1000);
     // parser WKT de Openlayers
     var parser = new ol.format.WKT();
     // Obtenemos el String WKT de la geometría dibujada
@@ -92,7 +151,8 @@ controlPerfil.getInteraction().on('drawend', function(e){
     // Obtenemos el perfil del server
     getProfileOfLineString(wkt);
     // ELiminamos todo lo que hayamos dibujado en la capa
-    vectorDibujarPerfil.getSource().refresh();
+    vectorDibujarPerfil.getSource().clear();
+    vectorDibujarPerfil.getSource().changed();
     // Desactivamos el control
     controlPerfil.setActive(false);
 });
@@ -114,20 +174,39 @@ $('body').append(
     '</div>'
 );
 
+/*
+#### Enviamos la petición al Servidor para que nos devuelva 
+#### el lineString con la coordenada Z y compuesto por una mayor
+#### densidad de puntos que el que enviamos
+*/
 function getProfileOfLineString(lineString){
     var req = new XMLHttpRequest();
+    // METHOD GET ,, URL /raster/perfil?wkt=LINESTRING(...)
     req.open('GET', '/raster/perfil?wkt=' + lineString, true);
+    // Función de escucha a eventos de la petición
     req.onreadystatechange = function (string) {
+        // Ha finalizado la petición
         if (req.readyState == 4) {
+            // Status entre 200 - 399
             if(req.status < 400){
+                // Obtenemos el lineStringZ en formato GeoJSON
                 var lineStringZ = JSON.parse(req.responseText);
+                // Llamamos a la función que gestiona los perfiles
+                // pasándole el lineStringZ
                 addPerfil(lineStringZ);
+                // Mostramos el perfil
                 showProfile();
+                // Eliminamos el círculo de cargando
                 $('#loading').css('visibility', 'hidden');
             }
             else{
+                // Ha habido un Error
+
+                // Eliminamos el circulo de cargando
                 $('#loading').css('visibility', 'hidden');
+                Materialize.toast('Error al obtener el perfil : ' /* + error*/, 4000 );
                 console.log("Error cargando JSON\n");
+                map.getView().setZoom(10);
             }
         }
     };
@@ -135,6 +214,7 @@ function getProfileOfLineString(lineString){
     $('#loading').css('visibility', 'visible');
 }
 
+/* Muestra el perfil en un menú modal*/
 function showProfile(){
     $('<a href="#modal-perfil">').leanModal({
         dismissible: false, // Modal can be dismissed by clicking outside of the modal
@@ -158,79 +238,106 @@ function showProfile(){
 // Función para añadir perfil
 function addPerfil(lineString){
 
+    // Nos aseguramos de que no haya nada dibujado
     vectorProfile.getSource().clear();
+    // Ni haya un perfil en el menú modal
     $('#perfil-container').empty();
 
-    //$('#wkt-profile').text(JSON.stringify(lineString));
-
+    // Formateamos las coordenadas para que tengan 3 decimales
     lineString.coordinates = lineString.coordinates.map(function(coords){
         coords[2] = coords[2].toFixed(3);
         return coords;
     })
 
+    // Creamos un parser de GeoJSON
     var parser = new ol.format.GeoJSON();
 
-    var feature = new ol.Feature({
+    // Leemos el lineString y obetenemos un objeto ol.Feature
+    var feature = profileFeature = new ol.Feature({
         geometry : new ol.geom.LineString(lineString.coordinates, 'XYZ')
     })
 
-	// New profil in the map
-	profil = new ol.control.Profil({
+
+    // Hacemos que el contenedor del perfil tenga un zoom inicial
+    // importante ya que el canvas que se pinte cogerá la propiedad 
+    // width de este div contenedor
+    $('#perfil-container').css('width', $(window).innerWidth() -20);
+    
+    // Creamos el perfil, esto añadirá la feature al mapa
+    // y el perfil al contenedor del perfil
+	profile = new ol.control.Profil({
         target : $('#perfil-container').get(0),
-        width : $(window).innerWidth() -20, 
-        //height : $(window).height()/4,
+        width : $('#perfil-container').innerWidth(), 
+        height : 150,
         info : {
-            zmin : 'Zmin', zmax : 'Zmax', altitude : 'Altitud', distance : 'Distancia'
+            zmin : 'Zmin', zmax : 'Zmax', altitude : 'Z', distance : 'Distancia'
         },
         units : 'm'
     });
 
-	map.addControl(profil);
-
-	// Vector style
-	var style = 
-	[	new ol.style.Style(
-			{	image: new ol.style.RegularShape(
-				{	radius: 10,
-					radius2: 5,
-					points: 5,
-					fill: new ol.style.Fill({ color: 'blue' })
-				}),
-			stroke: new ol.style.Stroke(
-				{	color: [0,0,255],
-					width: 2
-				}),
-			fill: new ol.style.Fill(
-				{	color: [0,0,255,0.3]
-				})
-			})
-	];
+    // Añadimos el control al mapa
+	map.addControl(profile);
 
 	// Show freature profile when loaded
 	var pt;
-	sourceProfile.once('change',function(e)
-	{
-    	if (sourceProfile.getState() === 'ready') 
-		{	profil.setGeometry(sourceProfile.getFeatures()[0]);
+	sourceProfile.once('change',function(e){
+    	if (sourceProfile.getState() === 'ready'){	
+            profile.setGeometry(sourceProfile.getFeatures()[0]);
 			pt = new ol.Feature(new ol.geom.Point([0,0]));
-			pt.setStyle([]);
+			pt.setStyle(stylePointPerfil);
 			sourceProfile.addFeature(pt);
 		}
 	});
+    // Añadimos la feature - Se dispara evente soureceProfile.once('change');
+    feature.setStyle(styleLineStringZ);
     sourceProfile.addFeature(feature);
 
-	// Draw a point on the map when mouse fly over profil
-	function drawPoint(e)
-	{	if (!pt) return;
-		if (e.type=="over") 
-		{	// Show point at coord
-			pt.setGeometry(new ol.geom.Point(e.coord));
-			pt.setStyle(null);
-		}
-		else 
-		{	// hide point
-			pt.setStyle([]);
-		}
-	};
-	profil.on(["over","out"], drawPoint);
+    // Nos aseguramos de que solo se disparé un evento resize
+    // Así que si ya existe uno de otro perfil anterior, lo eliminamos
+    $(window).off('resize');
+
+    // Creamos un nuevo evento que escuha cuando la pantalla cambia sus
+    // proporciones, lo que hacemos es crear otra vez el objeto perfil
+    // ajustándolo al width actual del contendor
+    $(window).on('resize', function(){
+        //console.log('resize', $('#perfil-container').innerWidth());
+
+        // Eliminamos el control anterior de perfil
+        map.removeControl(profile);
+        // Vaciamos el contenedor del perfil
+        $('#perfil-container').empty();
+        //Creamos el objeto perfil
+        profile = new ol.control.Profil({
+            target : $('#perfil-container').get(0),
+            width : $('#perfil-container').innerWidth() - 20, 
+            height : 150,
+            info : {
+                zmin : 'Zmin', zmax : 'Zmax', altitude : 'Z', distance : 'Distancia'
+            },
+            units : 'm'
+        });
+        // Añadimos el control al mapa
+        map.addControl(profile);
+        // Le añadimos la Feature actual
+        profile.setGeometry(profileFeature);
+        // Y los eventos que dispara
+        profile.on(["over","out"], drawPoint);
+    });
+    // Hacemos que el container sea responsive
+    $('#perfil-container').css('width', '100%');
+
+    // Draw a point on the map when mouse fly over profil
+    function drawPoint(e){	
+        if (!pt) return;
+        if (e.type=="over") {	
+            // Show point at coord
+            pt.setGeometry(new ol.geom.Point(e.coord));
+            pt.setStyle(stylePointPerfil);
+        } else {	
+            // hide point
+            pt.setStyle([]);
+        }
+    };
+    // Eventos
+	profile.on(["over","out"], drawPoint);
 }

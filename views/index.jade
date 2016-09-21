@@ -1,47 +1,105 @@
 extends layout
 
 block link
-	// Openlayers 3
-	link(rel="stylesheet" href="/javascripts/ol3/ol.css")
-	// ol3-ext
-	link(rel="stylesheet" href="/javascripts/ol3-ext/control/profilcontrol.css")
-	link(rel="stylesheet" href="/javascripts/ol3-ext/control/controlbar.css")
 	// Font Awesome
 	link(rel="stylesheet" href="/stylesheets/font-awesome/css/font-awesome.css")
 	// MaterializeCSS
 	link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css")
+	// Materialize Icons
+	link(href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet")
 	// Custom Css
 	link(rel="stylesheet" href="/stylesheets/style.css")
+block header
+	head 
+		nav.indigo.darken-3
+			.container
+				.nav-wrapper
+					a.brand-logo SIG Bétera
+					ul#nav-mobile.right.hide-on-med-and-down
+						li
+							a(href="/visor") Visor
 block content
-	#map
-	.coords-scale-container(style="position : absolute; right : 0.5em; bottom : 0.5em;z-index : 1; height : auto;")
-		#coords25830
-		#coords4258
-	#modal-perfil.modal.bottom-sheet
-		.modal-header.card-panel.lighten-2(style="text-align : center; margin-top : 0px;")
-			h4.flow-text.blue-text.text-darken-2 Perfil
-		.modal-content(style="padding : 0px;")
-			#perfil-container
-		.modal-footer
-			a.modal-action.modal-close.waves-effect.waves-green.btn-flat Aceptar
+	.parallax-container
+		.parallax
+			img(src="/images/betera-fondo-1.jpg" style="display : block; transform: translate3d(-60%, 0px, 0px);")
+	.section.white
+		.row.container.valign-wrapper
+			.col.s6.valign(style="height : 100px; background-image : url('/images/betera-logo.png'); background-size : contain; background-repeat : no-repeat;background-position : 50%;")
+			.col.s6.valign
+				h2.center-align.blue-text.lighten-3 SIG Bétera
+		.row.container.blue.lighten-3
+			.col.s12.m12.l6
+				.card-panel.indigo.darken-3
+					p.flow-text.center-align.white-text.darken-3 Visualizador Público
+				.row.card-panel.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em;")
+					.col.s12.valign-wrapper(style="height : 150px;")
+						p.flow-text.center-align.indigo-text.lighten-3.valign
+							|  Los mapas públicos accesibles para todos los ciudadanos y empresas son entre otros : Callejero, Histórico de ortofotografías, Urbanismo, ...
+				.center-align(style="margin-top : 1em; margin-bottom : 1em; margin-right : 0.75em; margin-left : 0.75em;")
+					a.waves-effect.waves-light.btn(style="margin : 0px auto" href="/visor")
+						i.material-icons.right call_made
+						| Acceder
+			.col.s12.m12.l6
+				.card-panel.indigo.darken-3
+					p.flow-text.center-align.white-text.darken-3 Visualizador Restringido
+				.row.card-panel.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em;")
+					form#login.col.s12.valign-wrapper(style="height : 150px;")
+						.row.valign(style="margin : 0px auto;")
+							.input-field.col.s12.m6
+								i.material-icons.prefix account_circle
+								input.validate#icon_prefix(type='text' name="username_email")
+								label(for='icon-prefix') E-mail o Usuario
+							.input-field.col.s12.m6
+								i.material-icons.prefix vpn_key
+								input.validate#icon_prefix(type='password' name='password')
+								label(for='icon-prefix') Contraseña
+				.center-align(style="margin-top : 1em; margin-bottom : 1em; margin-right : 0.75em; margin-left : 0.75em;")
+					a#submit-login.waves-effect.waves-light.btn(style="margin : 0px auto")
+						i.material-icons.right send
+						| Iniciar Sesión
+	.parallax-container
+		.parallax
+			img(src="/images/betera-fondo-2.jpg" style="display : block; transform: translate3d(-50%, 385px, 0px);")
 block script
 	// jQuery
 	script(src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous")
-	// Openlayers 3
-	script(src="/javascripts/ol3/ol-debug.js")
 	// MaterializeCSS (Google)
 	script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js")
-	// ol3-ext 
-	script(src="/javascripts/ol3-ext/interaction/drawregularinteraction.js")
-	script(src="/javascripts/ol3-ext/control/profilcontrol.js")
-	script(src="/javascripts/ol3-ext/control/togglecontrol.js")
-	script(src="/javascripts/ol3-ext/control/canvasscalelinecontrol.js")
-	script(src="/javascripts/ol3-ext/control/controlbar.js")
-	script(src="/javascripts/ol3-ext/control/overview.js")
-	//proj4js
-	script(src="/javascripts/proj4js/dist/proj4.js")
-	// ol-utils
-	script(src="/javascripts/ol-utils/projs.js")
-	script(src="/javascripts/ol-utils/map.js")
-	script(src="/javascripts/ol-utils/bar.js")
-	script(src="/javascripts/ol-utils/perfil.js")
+	script.
+		function setParallaxHeight(e){$('.parallax-container').css('height', $(window).innerHeight() / 2);}
+		setParallaxHeight();
+		$(window).on('resize', setParallaxHeight);
+		$('.parallax').parallax();
+		
+		$('#login').keyup(onEnterKeyLoginForm);
+
+		$('#submit-login').bind('click', onSubmitLogin);
+
+		function onEnterKeyLoginForm(e){
+			if(e.which == 13){
+				$('#submit-login').trigger('click');
+			}
+		}
+
+		function onSubmitLogin(){
+			$('#submit-login').attr('disabled', 'disabled');
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', '/usuarios/login', false);
+			xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState === 4){
+					$('#submit-login').attr('disabled', null);
+					if(xhr.status < 400){
+						window.location.href = '/visor';
+					}
+					else {
+						Materialize.toast('Error de autenticación', 2500);
+					}
+				}
+			}
+
+			xhr.send($.param([
+				{ name : 'username', value : $('#login').find('[name = "username_email"]').val() },
+				{ name : 'password', value : $('#login').find('[name = "password"]').val() }
+			]));
+		}

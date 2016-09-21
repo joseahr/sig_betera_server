@@ -7,13 +7,17 @@ const  promiseLib   = require('bluebird');
 // Repositorios
 const users         = require('./repos/users');
 const raster        = require('./repos/raster');
+const layers         = require('./repos/layers');
+const roles        = require('./repos/roles');
 // repositorio "capas" TODO
 
 // Loading all the database repositories separately,
 // because event 'extend' is called multiple times:
 const repos = {
     users,
-    raster
+    raster,
+    layers,
+    roles
 };
 
 // pg-promise initialization options:
@@ -29,6 +33,8 @@ const options = {
         // 2. We pass in `pgp` in case it is needed when implementing the repository;
         //    for example, to access namespaces `.as` or `.helpers`
         obj.users = repos.users(obj, pgp);
+        obj.users.layers = repos.layers(obj, pgp);
+        obj.users.roles = repos.roles(obj, pgp);
         obj.raster = repos.raster(obj, pgp);
     }
 

@@ -1,5 +1,4 @@
 //Mapa base del IGN
-console.log(proyecciones['25830']);
 var ignBase = new ol.layer.Tile({
     name: 'IGN Base',
     visible: true,
@@ -44,14 +43,14 @@ var groupCapasBase = new ol.layer.Group({
 var mousePositionControl25830 = new ol.control.MousePosition({
     coordinateFormat : ol.coordinate.createStringXY(3),
     target : $('#coords25830').get(0),
-    className  : 'ol-mouse-position-custom',
+    className  : 'ol-mouse-position-custom flow-text center-align font-size-1 padding-1',
     projection : proyecciones['25830']
 });
 
 var mousePositionControl4258 = new ol.control.MousePosition({
     coordinateFormat : ol.coordinate.toStringHDMS,
     target : $('#coords4258').get(0),
-    className  : 'ol-mouse-position-custom',
+    className  : 'ol-mouse-position-custom flow-text center-align font-size-1 padding-1',
     projection : proyecciones['4258']
 });
 
@@ -63,9 +62,9 @@ var map = new ol.Map({
     ],
     target 	: 'map',
     controls: ol.control.defaults({ attribution : false }).extend([
-        mousePositionControl25830, 
-        mousePositionControl4258,
-        scaleLineControl
+        scaleLineControl,
+        mousePositionControl25830,
+        mousePositionControl4258
     ]),
     view 	: new ol.View({
         projection: proyecciones['25830'],
@@ -73,3 +72,14 @@ var map = new ol.Map({
         center 	  : [718235.466608, 4385207.688928]
     })
 });
+
+$('#map').hover(onHover, onHoverOut);
+
+function onHover(){
+    console.log('hiverin');
+    $('.coords-scale-container').css('visibility', 'visible');
+}
+
+function onHoverOut(){
+    $('.coords-scale-container').css('visibility', 'hidden');
+}
