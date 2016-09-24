@@ -13,7 +13,7 @@ module.exports = passport =>{
     // deserializa al usuario, eliminándolo de la sesión
     passport.deserializeUser(function(id, done) {
         db.users.findBy('id', id)
-        .then(user => done(null, user))
+        .then(user => done(null, user[0]))
         .catch(err => done(err))
     });
 

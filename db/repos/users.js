@@ -22,7 +22,9 @@ module.exports = (rep, pgp) => {
                 column: pgp.as.name(column),
                 value: pgp.as.value(value)
             }),
-
+        // Crear el enum de roles
+        createRolesEnum : ()=>
+            rep.none(sql.createRolesEnum),
         // Creates the table;
         create: () =>
             rep.none(sql.create),

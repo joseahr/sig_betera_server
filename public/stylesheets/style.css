@@ -45,3 +45,17 @@ html, body, #map {
   visibility : hidden;
   pointer-events: none;
 }
+
+.layerswitcher-opacity {
+  width : 75% !important;
+  border : none !important;
+}
+
+.ol-layerswitcher{
+  width : 80%;
+  margin : 0px auto;
+}
+
+.track-info div, .point-info div {
+  font-size : 0.8em !important;
+}

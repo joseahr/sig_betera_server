@@ -1,6 +1,6 @@
 //  Vector layer
-var vector = new ol.layer.Vector( { source: new ol.source.Vector() });
-map.addLayer(vector);
+//var vector = new ol.layer.Vector( { source: new ol.source.Vector() });
+//map.addLayer(vector);
 
 // Barra de control principal -- Alamcenará todos los controles
 var mainbar = new ol.control.Bar();
@@ -10,10 +10,11 @@ map.addControl(mainbar);
 #### Control creado para editar features que se estén dibujando
 #### sobre una capa
 */
-var editbar = new ol.control.Bar({	
+/*var editbar = new ol.control.Bar({	
     toggleOne: true,	// one control active at the same time
     group:false			// group controls together
 });
+
 mainbar.addControl(editbar);
 
 // ol.control.Toggle (ol3-ext) sirve para añadir opciones 
@@ -178,5 +179,4 @@ save.on("change:active", function(e){
     var json= new ol.format.GeoJSON().writeFeatures(vector.getSource().getFeatures());
     $("#export").text(json);
 });
-
 */

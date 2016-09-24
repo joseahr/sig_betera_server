@@ -1,7 +1,7 @@
 CREATE TABLE ${schema~}.Roles
 (
-    id_user serial NOT NULL,
-    id_layer serial NOT NULL,
+    id_user integer NOT NULL,
+    id_layer integer NOT NULL,
     rol ROLES_ENUM NOT NULL DEFAULT 'r',
     CONSTRAINT roles_pkey PRIMARY KEY (id_user, id_layer),
     CONSTRAINT fk_roles_layers FOREIGN KEY (id_layer)

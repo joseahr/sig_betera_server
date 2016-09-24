@@ -53,6 +53,7 @@ module.exports = {
         drop: sql('users/drop.sql'),
         add: sql('users/add.sql'),
         createCitextExtension: sql('users/extension_citext.sql'),
+        createRolesEnum : sql('users/user-roles-enum.sql'),
         findBy: sql('users/find_by.sql')
     },
     raster : {
@@ -61,12 +62,27 @@ module.exports = {
     layers : {
         create : sql('layers/create.sql'),
         schema : sql('layers/info-schema.sql'),
-        getLayerAsGeoJSON : sql('layers/as-geojson.sql')
+        getLayerAsGeoJSON : sql('layers/as-geojson.sql'),
+        getLayerGeometryType : sql('layers/geometry-type.sql'),
+        findBy: sql('layers/find-by.sql'),
+        getLayerNames : sql('layers/layer-names.sql')
     },
     roles : {
         create : sql('roles/create.sql'),
         createEnum : sql('roles/type-enum.sql'),
-        getLayerNamesByPerms : sql('roles/user-layers.sql')
+        getLayerNamesByPerms : sql('roles/user-layers.sql'),
+        hasPerm : sql('roles/has-perm.sql'),
+        addPerm : sql('roles/add-perm.sql'),
+        updatePerm : sql('roles/update-perm.sql')
+    },
+    maps : {
+        createMapsTable : sql('maps/create.sql'),
+        createMapsUsersTable : sql('maps/create-users-fk-table.sql'),
+        createMapsLayersTable : sql('maps/create-layers-fk-table.sql'),
+        hasMap : sql('maps/has-map.sql'),
+        getMaps : sql('maps/user-maps.sql'),
+        getMapNames : sql('maps/map-names.sql'),
+        getLayers : sql('maps/get-layers.sql')
     }
 };
 

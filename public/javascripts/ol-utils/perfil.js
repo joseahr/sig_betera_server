@@ -29,13 +29,18 @@ var profile;
 var profileFeature;
 
 // Capa que almacenará el lineString del perfil dibujado
-var vectorDibujarPerfil = new ol.layer.Vector( { source: new ol.source.Vector() });
+var vectorDibujarPerfil = new ol.layer.Vector({ 
+    source: new ol.source.Vector(),
+    displayInLayerSwitcher : false,
+    allwaysOnTop : true,
+    name : 'Dibujo Perfil'
+});
 
 // Estilo del lineString
 var styleLineStringZ = [	
     new ol.style.Style({	
         stroke: new ol.style.Stroke({	
-            color: [251,140,0],
+            color: [0,0,0],
             width: 3,
             lineDash: [.5, 10]
         })
@@ -54,12 +59,12 @@ var stylePointPerfil = [
             rotation: 0,
             rotateWithView: true,
             offsetY: -17,
-            color: '#00bbff',
+            color: '#303f9f',
             fill: new ol.style.Fill(
             {	color: '#fff'
             }),
             stroke: new ol.style.Stroke(
-            {	color: '#00bbff',
+            {	color: '#303f9f',
                 width: 1,
             })
         }),
@@ -100,7 +105,10 @@ var sourceProfile = new ol.source.Vector({
 
 var vectorProfile = new ol.layer.Vector({	
     source: sourceProfile,
-    style: styleLineStringZ
+    style: styleLineStringZ,
+    displayInLayerSwitcher : false,
+    allwaysOnTop : true,
+    name : 'Perfil LineStringZ'
 });
 // Añadimos al mapa
 map.addLayer(vectorProfile);

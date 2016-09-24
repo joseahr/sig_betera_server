@@ -19,6 +19,7 @@ const expressSession = require('express-session');
 const routes = require('./routes/index');
 const users = require('./routes/users');
 const raster = require('./routes/raster');
+const layers = require('./routes/layers');
 
 // Objeto app express
 const app = express();
@@ -53,9 +54,21 @@ require('./passport')(passport);
 
 app.set('trust proxy', true) // specify a single subnet
 
+app.use((req, res, next)=>{
+  if(req.user){
+    let user = Object.keys(req.user).reduce((o,k)=>{
+      if(k !== 'password') o[k] = req.user[k];
+      return o;
+    }, {});
+    res.locals.user = user;
+  }
+  next();
+});
+
 app.use('/', routes);
 app.use('/usuarios', users);
-app.use('/raster', raster)
+app.use('/raster', raster);
+app.use('/usuarios/capas', layers);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -6,21 +6,24 @@ block link
 	// ol3-ext
 	link(rel="stylesheet" href="/javascripts/ol3-ext/control/profilcontrol.css")
 	link(rel="stylesheet" href="/javascripts/ol3-ext/control/controlbar.css")
+	link(rel="stylesheet" href="/javascripts/ol3-ext/control/layerswitchercontrol.css")
 	// Font Awesome
 	link(rel="stylesheet" href="/stylesheets/font-awesome/css/font-awesome.css")
 	// MaterializeCSS
 	link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css")
-	// Custom Css
+	// Materialize Icons
+	link(href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet")
+	// Custom CSS
 	link(rel="stylesheet" href="/stylesheets/style.css")
 block content
 	#map
-	.ol-unselectable.coords-scale-container.collection(style='position : absolute; right : 0.5em; bottom : 2.15em; height : auto; max-width : 50%; margin : 0px;')
-		.collection-item.flow-text.center-align.blue.lighten-2.font-size-1(style='color : white; padding : 0.15em;') ETRS89 UTM H30
+	.coords-scale-container.collection(style='position : absolute; right : 0.5em; bottom : 2.15em; height : auto; max-width : 50%; margin : 0px;')
+		.collection-item.flow-text.center-align.indigo.darken-2.font-size-1(style='color : white; padding : 0.15em;') ETRS89 UTM H30
 		#coords25830.collection-item(style='padding : 0.15em;')
-		.collection-item.flow-text.center-align.blue.lighten-2.font-size-1(style='color : white; padding : 0.15em;') ETRS89 Geográficas
+		.collection-item.flow-text.center-align.indigo.darken-2.font-size-1(style='color : white; padding : 0.15em;') ETRS89 Geográficas
 		#coords4258.collection-item(style='padding : 0.15em;')
 	#modal-perfil.modal.bottom-sheet
-		.modal-header.card-panel.blue.lighten-3(style="text-align : center; margin : 0px;")
+		.modal-header.card-panel.indigo.darken-2(style="text-align : center; margin : 0px;")
 			h4.flow-text.white-text.text-darken-2(style="margin : 0px") Perfil
 		.modal-content(style="padding : 0px;")
 			#perfil-container(style="padding-top : 15px;")
@@ -30,9 +33,44 @@ block content
 			a.modal-action.waves-effect.waves-green.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Elige una opción de descarga')
 				i.fa.fa-download.green-text.darken-2
 			a#download-perfil.modal-action.waves-effect.waves-green.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Descargar Perfil como PNG')
-				span.font-size-1.black-text.lighten-2.flow-text PNG
+				span.font-size-1.indigo-text.darken-2.flow-text PNG
 			a#download-perfil-geojson.modal-action.waves-effect.waves-green.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Descargar LineStringZ como GeoJSON')
-				span.font-size-1.black-text.lighten-2.flow-text GeoJSON
+				span.font-size-1.indigo-text.darken-2.flow-text GeoJSON
+	ul#slide-out.side-nav
+		li(style="background : url('/images/andromeda.jpg'); background-size : cover;")
+			.userView
+				a(href='#!user')
+					i.material-icons.prefix.circle.indigo-text.darken-2(style="font-size : 5em;") account_circle
+				if (user)
+					a(href='#!name')
+						span.white-text.name #{user.name}
+					a(href='#!email')
+						span.white-text.email #{user.email}
+				else
+					a(href='#!name')
+						span.white-text.name Usuario Invitado
+					a(href='#!email')
+						span.white-text.email -----			
+
+		li
+			a(href='#!') Link prueba
+		li
+			.divider
+		li.no-padding
+			ul.collapsible.collapsible-accordion
+				li
+					a.collapsible-header
+						| Capas
+						i.material-icons arrow_drop_down
+					.collapsible-body#layerSwitcher
+		li
+			.divider
+		li
+			a.subheader Footer Prueba
+		li
+			a.waves-effect(href='#!') Third Link With Waves
+	a(href="#slide-out" id="menu-lateral-btn" data-activates="slide-out" class="button-collapse tooltipped valign-wrapper" data-tooltip="Menú" data-delay="50" data-position="top" style="position : absolute; bottom : 0.5em; left : 0.5em;")
+		i.material-icons.prefix.circle.valign.indigo-text.darken-2.white(style="font-size : 3.5em;") account_circle
 block script
 	// jQuery
 	script(src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous")
@@ -49,6 +87,7 @@ block script
 	script(src="/javascripts/ol3-ext/control/overview.js")
 	script(src="/javascripts/ol3-ext/style/fontsymbol.js")
 	script(src="/javascripts/ol3-ext/style/fontawesome.def.js")
+	script(src="/javascripts/ol3-ext/control/layerswitchercontrol.js")
 	//proj4js
 	script(src="/javascripts/proj4js/dist/proj4.js")
 	// ol-utils
@@ -57,7 +96,59 @@ block script
 	script(src="/javascripts/ol-utils/bar.js")
 	script(src="/javascripts/ol-utils/perfil.js")
 	script.
+		$(".button-collapse").sideNav();
 		$('.tooltipped').tooltip();
 		$('.ol-scale-line').css('left', 'auto');
 		$('.ol-scale-line').css('right', '0.5em');
 		map.render();
+
+		$('#menu-lateral-btn').hover(function(){
+			$(this).find('i').css('color', '#000');
+		}, function(){
+			$(this).find('i').css('color', '#00bbff');
+		});
+
+		var perms;
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', '/usuarios/capas', true);
+		xhr.onreadystatechange = function(){
+			if(xhr.readyState === 4 && xhr.status < 400){
+				capas = JSON.parse(xhr.responseText);
+				Materialize.toast('capas cargadas: ' + capas.map(function(c){ return c.layerName }).join(', '), 2500);
+				perms = capas.map(function(c){
+					var obj = {};
+					obj.layerName = c.layerName;
+					obj.rol = c.rol;
+					return obj;
+				});
+				console.log(perms);
+				capas = capas.forEach(addCapa);
+			}
+			else if(xhr.readyState === 4)
+				Materialize.toast('Error al cargar las capas', 2500);
+		};
+		xhr.send(null);
+
+		var parser = new ol.format.GeoJSON();
+
+		function addCapa(capa){
+			console.log('Añadiendo capa:', capa.layerName, capa.layer);
+			var vector = new ol.layer.Vector({
+				name : capa.layerName,
+				type : capa.layer.features[0].geometry.type,
+				rol  : capa.rol,
+				strategy : ol.loadingstrategy.bbox,
+				source : new ol.source.Vector({
+					features : parser.readFeatures(capa.layer)
+				})
+			});
+			map.addLayer(vector);
+
+			// Capas que queremos arriba del todo
+			map.getLayers().forEach(function(l, i){
+				if(l.get('name') == 'Perfil LineStringZ'){
+					map.getLayers().getArray().splice(i, 1);
+					map.getLayers().getArray().push(l);
+				}
+			});
+		}

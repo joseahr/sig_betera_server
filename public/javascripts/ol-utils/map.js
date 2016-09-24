@@ -83,3 +83,15 @@ function onHover(){
 function onHoverOut(){
     $('.coords-scale-container').css('visibility', 'hidden');
 }
+
+map.addControl(new ol.control.LayerSwitcher({
+    target : $('#layerSwitcher').get(0),
+    oninfo : function(l){
+        console.log(l);
+    },
+    extent : true,
+    //trash  : true,
+    onextent : function(l){
+        map.getView().fit(l.getSource().getExtent(), map.getSize());
+    }
+}));
