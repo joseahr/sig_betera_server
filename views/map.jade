@@ -96,8 +96,12 @@ block script
 	script(src="/javascripts/ol-utils/bar.js")
 	script(src="/javascripts/ol-utils/perfil.js")
 	script.
-		$(".button-collapse").sideNav();
-		$('.tooltipped').tooltip();
+		$(".button-collapse").sideNav({
+			edge : 'left',
+			closeOnClick : true
+		});
+		//$('#sidenav-overlay').remove();
+
 		$('.ol-scale-line').css('left', 'auto');
 		$('.ol-scale-line').css('right', '0.5em');
 		map.render();
@@ -109,44 +113,92 @@ block script
 		});
 
 		var perms;
-		var xhr = new XMLHttpRequest();
-		xhr.open('GET', '/usuarios/capas', true);
-		xhr.onreadystatechange = function(){
-			if(xhr.readyState === 4 && xhr.status < 400){
-				capas = JSON.parse(xhr.responseText);
-				Materialize.toast('capas cargadas: ' + capas.map(function(c){ return c.layerName }).join(', '), 2500);
-				perms = capas.map(function(c){
-					var obj = {};
-					obj.layerName = c.layerName;
-					obj.rol = c.rol;
-					return obj;
-				});
-				console.log(perms);
-				capas = capas.forEach(addCapa);
-			}
-			else if(xhr.readyState === 4)
-				Materialize.toast('Error al cargar las capas', 2500);
-		};
-		xhr.send(null);
+		var XHRPromise = function(method, url){
+			return new Bluebird(function(resolve, reject){
+				var xhr = new XMLHttpRequest();
+				xhr.open(method, url, true);
+				xhr.onreadystatechange = function(){
+					if(xhr.readyState === 4 && xhr.status < 400) resolve(JSON.parse(xhr.responseText));
+					else if(xhr.readyState === 4) reject(JSON.parse(xhr.responseText))
+				};
+				xhr.send(null);
+			});
+		}
 
 		var parser = new ol.format.GeoJSON();
 
-		function addCapa(capa){
-			console.log('Añadiendo capa:', capa.layerName, capa.layer);
+		XHRPromise('GET', '/usuarios/mapas')
+		.then(function(listOfMaps){
+			return listOfMaps.reduce(function(promise, mapa){
+				//console.log(mapa.mapName, mapVisible);
+				var groupCapasMap = new ol.layer.Group({
+					name: mapa.mapName,
+					format : new ol.format.GeoJSON(),
+					visible : true
+				});
+				map.addLayer(groupCapasMap);
+				mapVisible = false;
+				return promise.then(function(){
+					return Bluebird.all(
+						mapa.maplayerIds.map(function(mlId){ 
+							return XHRPromise('GET', '/usuarios/capas/' + mlId)
+							.then(function(capa){
+								addCapa(capa, groupCapasMap);
+							})
+							.catch(function(error){
+
+							});
+						})
+					)// Bluebird.all
+				})
+				.then(function(){
+					Materialize.toast('Mapa cargado : ' + mapa.mapName, 2500);
+				})
+			}, Bluebird.resolve(null))
+		})
+		.catch(function(err){
+			console.log(err);
+		});
+
+		var capas = [];
+
+		map.getView().on('change:resolution', function(){
+			//console.log(map.getView().getZoom());
+			if(map.getView().getZoom() < 14){
+				capas.forEach(function(c){ c.setVisible(false); });
+				return;
+			}
+			capas.forEach(function(c){ c.setVisible(true); });
+		});
+
+		function addCapa(capa, group){
+			console.log(capa.geomColumnType, 'capa');
+			if(typeof capa === 'string'){
+				return;
+			}
+			//console.log('Añadiendo capa:', capa.layerName, 'al grupo: ', group.get('name'));
+			
 			var vector = new ol.layer.Vector({
 				name : capa.layerName,
-				type : capa.layer.features[0].geometry.type,
+				geomColumnType : capa.geomColumnType,
 				rol  : capa.rol,
+				visible : false,
 				strategy : ol.loadingstrategy.bbox,
 				source : new ol.source.Vector({
+					// Ponerlo en false para obtener FeatureCollection en 
+					// la interacción Modify. Con esto puesto en true, el 
+					// método source.getFeaturesCollection() devolverá null
+					useSpatialIndex : false,
 					features : parser.readFeatures(capa.layer)
 				})
 			});
-			map.addLayer(vector);
+			
+			capas.push(vector);
+			group.getLayers().extend([vector]);
 
 			// Capas que queremos arriba del todo
 			map.getLayers().forEach(function(l, i){
-				if(l.get('name') == 'Perfil LineStringZ'){
+				if(l.get('name') == 'Perfil LineStringZ' || l.get('name') == 'vector medir'){
 					map.getLayers().getArray().splice(i, 1);
 					map.getLayers().getArray().push(l);
 				}

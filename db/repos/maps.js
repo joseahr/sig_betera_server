@@ -24,8 +24,9 @@ module.exports = (rep, pgp) => {
             })
             .then(maps => maps.length ? maps.map( m => m.id_map ) : undefined),
         // Obtener el nombre de todos los mapas
-        getMapNames : (...ids)=> rep.manyOrNone(sql.getMapNames, {ids})
-        .then(mapNames => mapNames.length ? mapNames : undefined),
+        getMapNames : (...ids)=> 
+            rep.manyOrNone(sql.getMapNames, {ids})
+            .then(mapNames => mapNames.length ? mapNames : undefined),
         // Obtener las capas que conforman un mapa
         // Devuelve una lista con las ids de las capas
         getLayers : (id_map)=> 
@@ -35,21 +36,25 @@ module.exports = (rep, pgp) => {
         // Por ejemplo : Un usuario se le asigna un mapa
         // En ciertas capas del mapa puede no tener permisos de lectura
         // y habría que dárselos para que pudiera ver la capa
-        getMapLayers : function(id_user){
+        getMapsAndLayers : function(id_user){
             return this.getMaps(id_user)
             .then(listOfMaps =>{
                 if(!listOfMaps) return Promise.resolve(null);
                 return rep.tx( t =>{
                     return t.batch(listOfMaps.map(this.getLayers))
-                    .then(mapLayers => {
+                })
+                .then(mapLayers =>{
+                    return this.getMapNames(...listOfMaps)
+                    .then(mapNames => {
                         return listOfMaps.reduce( (arr, id_map, idx) =>{
-                            arr.push({ id : id_map, layerIds : mapLayers[idx] });
+                            arr.push({ id : id_map, mapName : mapNames[idx].name, maplayerIds : mapLayers[idx] });
                             return arr;
-                        }, [])
-                    })
-                });
+                        }, []);
+                    })                
+                })
 
             })
+
         }
     };
 };

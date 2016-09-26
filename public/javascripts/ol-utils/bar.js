@@ -3,180 +3,314 @@
 //map.addLayer(vector);
 
 // Barra de control principal -- Alamcenará todos los controles
+
+var vectorMeasure = new ol.layer.Vector({
+    name : 'vector medir',
+    displayInLayerSwitcher : false,
+    source : new ol.source.Vector()
+});
+map.addLayer(vectorMeasure);
+
 var mainbar = new ol.control.Bar();
 map.addControl(mainbar);
 
-/*
-#### Control creado para editar features que se estén dibujando
-#### sobre una capa
-*/
-/*var editbar = new ol.control.Bar({	
-    toggleOne: true,	// one control active at the same time
-    group:false			// group controls together
+var measureBar = new ol.control.Toggle({
+    name : 'medir',	
+    html: '<i class="fa fa-edit"></i>',
+    tooltip : {
+        text : 'Medir',
+        delay : 50,
+        position : 'right'
+    },
+    onToggle : function(){
+
+        measureSubBar.getControls().forEach(function(c){
+            $(c.element).find('i').css('color', 'rgba(0, 60, 136, 0.5)');
+            c.setActive(false);
+        });
+
+        vectorMeasure.getSource().clear();
+        measureBar.setInteraction(null);
+
+        map.removeOverlay(measureTooltip);
+        map.removeOverlay(helpTooltip);
+        map.removeOverlay(lastTooltip);
+
+        if(!this.getActive()) return;
+        mainbar.getControls().forEach(function(control){
+            if(control.name !== 'medir' && control.name){
+                console.log('control', control.name);
+                control.setActive(false);
+                control.onToggle.call(control);
+            }
+        });
+
+    }
 });
 
-mainbar.addControl(editbar);
+var measureSubBar = new ol.control.Bar();
 
-// ol.control.Toggle (ol3-ext) sirve para añadir opciones 
-// a los botones (debajo)
-var selectCtrl = new ol.control.Toggle({	
-    html: '<i class="fa fa-hand-pointer-o"></i>',
-    title: "Select",
-    interaction: new ol.interaction.Select (),
-    active:false
-});
-
-var sbar = new ol.control.Bar();
-sbar.addControl (new ol.control.Toggle({	
-    html: '<i class="fa fa-times"></i>',
-    title: "Elminar",
+var controlLineMeasure = new ol.control.Toggle({
+    name : 'medir longitud',
+    html: '<i class="fa fa-share-alt"></i>',
+    tooltip : {
+        text : 'Longitud',
+        delay : 50,
+        position : 'left'
+    },
     className: "noToggle",
-    onToggle: function(){	
-        var features = selectCtrl.getInteraction().getFeatures();
-        if (!features.getLength()) console.log("Select an object first...");
-        else console.log(features.getLength() + " object(s) deleted.");
-        for (var i=0, f; f=features.item(i); i++) {	
-            vector.getSource().removeFeature(f);
-        }
-        selectCtrl.getInteraction().getFeatures().clear();
-    }
-}));
-sbar.addControl (new ol.control.Toggle({	
-    html: '<i class="fa fa-info"></i>',
-    title: "Show informations",
-    className: "noToggle",
-    onToggle: function() {	
-        switch (selectCtrl.getInteraction().getFeatures().getLength()){	
-            case 0: console.log("Select an object first...");break;
-            case 1:
-                var f = selectCtrl.getInteraction().getFeatures().item(0);
-                console.log("Selection is a "+f.getGeometry().getType());
-                break;
-            default:
-                console.log(selectCtrl.getInteraction().getFeatures().getLength()+ " objects seleted.");
-                break;
-        }
-    }
-}));
+    onToggle: function(){
+        if(this.getActive())
+            $(this.element).find('i').css('color', 'rgba(60, 136, 0, 0.7)')
+        else
+            $(this.element).find('i').css('color', 'rgba(0, 60, 136, 0.5)');
 
-editbar.addControl ( selectCtrl, sbar);
-
-// Add editing tools
-var pedit = new ol.control.Toggle({	
-    html: '<i class="fa fa-map-marker" ></i>',
-    title: 'Point',
-    interaction: new ol.interaction.Draw({	
-        type: 'Point',
-        source: vector.getSource()
-    })
-});
-editbar.addControl ( pedit );
-
-var ledit = new ol.control.Toggle({	
-    html: '<i class="fa fa-share-alt" ></i>',
-    title: 'LineString',
-    interaction: new ol.interaction.Draw({	
-        type: 'LineString',
-        source: vector.getSource()
-    })
-});
-editbar.addControl(
-    ledit, 
-    // Options bar ssociated with the control
-    new ol.control.Bar({	
-        controls:[ 
-            new ol.control.Toggle({	
-                html: 'undo',//'<i class="fa fa-mail-reply"></i>',
-                title: "Delete last point",
-                className: "noToggle ol-text-button",
-                onToggle: function(){	
-                    ledit.getInteraction().removeLastPoint();
-                }
-            }),
-            new ol.control.Toggle({	
-                html: 'Finish',
-                title: "finish",
-                className: "noToggle ol-text-button",
-                onToggle: function(){	
-                    ledit.getInteraction().finishDrawing();
-                }
-            })
-        ]
-    }) 
-);
-
-var fedit = new ol.control.Toggle({	
-    html: '<i class="fa fa-bookmark-o fa-rotate-270" ></i>',
-    title: 'Polygon',
-    interaction: new ol.interaction.Draw({	
-        type: 'Polygon',
-        source: vector.getSource()
-    })
-});
-editbar.addControl(
-    fedit, 
-    // Options bar ssociated with the control
-    new ol.control.Bar({	
-        controls:[ 
-            new ol.control.Toggle({	
-                html: 'undo',//'<i class="fa fa-mail-reply"></i>',
-                title: "undo last point",
-                className: "noToggle ol-text-button",
-                onToggle: function(){	
-                    fedit.getInteraction().removeLastPoint();
-                }
-            }),
-            new ol.control.Toggle({	
-                html: 'finish',
-                title: "finish",
-                className: "noToggle ol-text-button",
-                onToggle: function(){	
-                    fedit.getInteraction().finishDrawing();
-                }
-            })
-        ]
-    }) 
-);
-
-// Prevent null objects on finishDrawing
-vector.getSource().on('addfeature', function(e){	
-    switch (e.feature.getGeometry().getType()){	
-        case 'Polygon': 
-            if (e.feature.getGeometry().getCoordinates()[0].length < 4) 
-                vector.getSource().removeFeature(e.feature);
-            break;
-        case 'LineString': 
-            if (e.feature.getGeometry().getCoordinates().length < 2) 
-                vector.getSource().removeFeature(e.feature);
-            break;
-        default: break;
-    }
-    console.log(vector.getSource().getFeatures().length)
-});
-
-// Add a custom push button with onToggle function
-/*
-mainbar.addControl ( new ol.control.Toggle({	
-    html: '<i class="fa fa-smile-o"></i>',
-    title: "Hello world!",
-    onToggle: function(active){	
-        if (active) console.log("Hello, I'm active"); 
-        else console.log("Hello, I'm not active"); 
-    }
-}));
-*/
+        desactivar();
         
-// Add a save button with on active event
-/*
-var save = new ol.control.Toggle({	
-    html: '<i class="fa fa-download"></i>',
-    title: "Save",
-    className: "noToggle"
-});
-mainbar.addControl ( save );
+        if(!this.getActive()) return;
 
-save.on("change:active", function(e){	
-    var json= new ol.format.GeoJSON().writeFeatures(vector.getSource().getFeatures());
-    $("#export").text(json);
+        controlPolygonMeasure.setActive(false);
+        controlPolygonMeasure.onToggle.call(controlPolygonMeasure);
+
+        var it = new ol.interaction.Draw({
+            source : vectorMeasure.getSource(),
+            type : 'LineString',
+        });
+        it.on('drawstart', drawStart);
+        it.on('drawend', drawEnd);
+
+        map.addInteraction(it);
+        measureBar.setInteraction(it);
+
+        createHelpTooltip();
+        createMeasureTooltip();
+    }
 });
-*/
+
+var controlPolygonMeasure = new ol.control.Toggle({	
+    html: '<i class="fa fa-bookmark-o fa-rotate-270" ></i>',
+    tooltip : {
+        text : 'Área',
+        delay : 50,
+        position : 'bottom'
+    },
+    className: "noToggle",
+    onToggle: function() {
+        if(this.getActive())
+            $(this.element).find('i').css('color', 'rgba(60, 136, 0, 0.7)')
+        else
+            $(this.element).find('i').css('color', 'rgba(0, 60, 136, 0.5)');
+        
+        desactivar();
+        
+        if(!this.getActive()) return;
+
+        controlLineMeasure.setActive(false);
+        controlLineMeasure.onToggle.call(controlLineMeasure);
+
+        var it = new ol.interaction.Draw({
+            source : vectorMeasure.getSource(),
+            type : 'Polygon',
+        });
+        it.on('drawstart', drawStart);
+        it.on('drawend', drawEnd);
+
+        map.addInteraction(it);
+        measureBar.setInteraction(it);
+
+        createHelpTooltip();
+        createMeasureTooltip();
+    }
+});
+
+var undoLastPointMeasureControl = new ol.control.Toggle({	
+    html: '<i class="fa fa-mail-reply"></i>',
+    className: "noToggle ol-text-button",
+    tooltip : {
+        text : 'Eliminar último punto',
+        delay : 50,
+        position : 'bottom'
+    },
+    onToggle: function(){
+        if(measureBar.getInteraction())
+            measureBar.getInteraction().removeLastPoint();
+    }
+});
+var finishDrawingMeasureControl = new ol.control.Toggle({	
+    html: 'Fin',
+    className: "noToggle ol-text-button",
+    tooltip : {
+        text : 'Finalizar',
+        delay : 50,
+        position : 'right'
+    },
+    onToggle: function(){
+        if(measureBar.getInteraction() && sketch ){
+            measureBar.getInteraction().finishDrawing();
+            var feature = vectorMeasure.getSource().getFeatures()[0];
+            var geom = feature.getGeometry();
+            if(geom instanceof ol.geom.LineString && !geom.getLength()){
+                map.removeOverlay(measureTooltip);
+                map.removeOverlay(lastTooltip);
+                sketch = null;
+                createMeasureTooltip();
+                vectorMeasure.getSource().clear();
+                return Materialize.toast('Dibuje un elemento lineal a medir', 2500);
+            }
+            if(geom instanceof ol.geom.Polygon && !geom.getArea()){
+                map.removeOverlay(measureTooltip);
+                map.removeOverlay(lastTooltip);
+                sketch = null;
+                createMeasureTooltip();
+                vectorMeasure.getSource().clear();
+                return Materialize.toast('Dibuje un elemento poligonal a medir', 2500);
+            }
+        } else {
+            Materialize.toast('Dibuje un elemento a medir', 2500);
+        }
+    }
+});
+
+measureSubBar.addControl (controlLineMeasure);
+measureSubBar.addControl (controlPolygonMeasure);
+measureSubBar.addControl(undoLastPointMeasureControl);
+measureSubBar.addControl(finishDrawingMeasureControl);
+
+mainbar.addControl(measureBar, measureSubBar);
+
+var grs80 = new ol.Sphere(6378137);
+var lastTooltip;
+var sketch; // Feature que se está dibujando
+var helpTooltipElement; // Elemento HTML (mensaje de ayuda)
+var helpTooltip; // Overlay para ver el mensaje de ayuda
+var measureTooltipElement; // Elemento HTML (mensaje de medición)
+var measureTooltip; // Overlay para ver el mensaje de medición
+var listener;
+var continuePolygonMsg = 'Click para continuar dibujado el polígono'; // Mensaje que se muestra cuando un usuario dibuja un polígono
+var continueLineMsg = 'Click para continuar dibujado la línea'; // Mensaje que se muestra cuando un usuario dibuja una línea
+
+function desactivar(){
+    helpTooltipElement = null;
+    measureTooltipElement = null;
+    sketch = null;
+    map.removeOverlay(helpTooltip);
+    map.removeOverlay(measureTooltip);
+
+    map.removeInteraction(measureBar.getInteraction());
+    measureBar.setInteraction(null);
+}
+
+function formatLength(line) {
+    var coordinates = line.getCoordinates();
+    var length = 0;
+    var sourceProj = map.getView().getProjection();
+    for (var i = 0, ii = coordinates.length - 1; i < ii; ++i) {
+        var c1 = ol.proj.transform(coordinates[i], sourceProj, 'EPSG:4326');
+        var c2 = ol.proj.transform(coordinates[i + 1], sourceProj, 'EPSG:4326');
+        length += grs80.haversineDistance(c1, c2);
+    }
+    return length > 1000 
+        ? (Math.round(length / 1000 * 100) / 100) + ' km'
+        : (Math.round(length * 100) / 100) + ' m';
+}
+
+function formatArea(polygon) {
+    var sourceProj = map.getView().getProjection();
+    var geom = (polygon.clone().transform(sourceProj, 'EPSG:4326'));
+    var coordinates = geom.getLinearRing(0).getCoordinates();
+    var area = Math.abs(grs80.geodesicArea(coordinates));
+    
+    return area > 10000
+        ? (Math.round(area / 1000000 * 100) / 100) + ' km<sup>2</sup>'
+        : (Math.round(area * 100) / 100) + ' m<sup>2</sup>';
+}
+
+function createMeasureTooltip(){
+    if (measureTooltipElement) {
+        measureTooltipElement.parentNode.removeChild(measureTooltipElement);
+    }
+    measureTooltipElement = document.createElement('div');
+    measureTooltipElement.className = 'chip tooltip indigo-text darken-2 tooltip-measure';
+    measureTooltip = new ol.Overlay({
+        element: measureTooltipElement,
+        offset: [0, -15],
+        positioning: 'bottom-center'
+    });
+    map.addOverlay(measureTooltip);
+}
+
+function createHelpTooltip(){
+    if (helpTooltipElement) {
+        helpTooltipElement.parentNode.removeChild(helpTooltipElement);
+    }
+    helpTooltipElement = document.createElement('div');
+    helpTooltipElement.className = 'chip hide-on-small-only tooltip hidden';
+    helpTooltip = new ol.Overlay({
+        element: helpTooltipElement,
+        offset: [15, 0],
+        positioning: 'center-left'
+    });
+    map.addOverlay(helpTooltip);
+}
+
+function pointerMoveHandler(evt) { // Función que se ejecuta cada vez que nos movemos por el mapa
+    if (evt.dragging || !measureBar.getInteraction()) {
+        return;
+    }
+    var helpMsg = 'Click para empezar a dibujar';
+
+    if (sketch) {
+        var geom = (sketch.getGeometry());
+        if (geom instanceof ol.geom.Polygon) {
+            helpMsg = continuePolygonMsg;
+        } else if (geom instanceof ol.geom.LineString) {
+            helpMsg = continueLineMsg;
+        }
+    }
+
+    helpTooltipElement.innerHTML = helpMsg;
+    helpTooltip.setPosition(evt.coordinate);
+
+    $(helpTooltipElement).removeClass('hidden');
+}
+
+function drawStart (evt){
+    vectorMeasure.getSource().clear();
+    if (lastTooltip)
+        map.removeOverlay(lastTooltip);
+
+    sketch = evt.feature;
+        
+    var tooltipCoord = evt.coordinate;
+
+    listener = sketch.getGeometry().on('change', function(evt) {
+        var geom = evt.target;
+        var output;
+        if (geom instanceof ol.geom.Polygon) {
+            output = formatArea(/** @type {ol.geom.Polygon} */ (geom));
+            tooltipCoord = geom.getInteriorPoint().getCoordinates();
+        } else if (geom instanceof ol.geom.LineString) {
+            output = formatLength( /** @type {ol.geom.LineString} */ (geom));
+            tooltipCoord = geom.getLastCoordinate();
+        }
+        measureTooltipElement.innerHTML = output;
+        measureTooltip.setPosition(tooltipCoord);
+    });
+        
+}; // drawstart
+
+function drawEnd(){
+
+    map.removeOverlay(helpTooltip);
+    measureTooltipElement.className = 'chip tooltip indigo-text darken-2 tooltip-static';
+    measureTooltip.setOffset([0, -7]);
+    lastTooltip = measureTooltip;
+
+    measureTooltipElement = null;
+    sketch = null;
+
+    createMeasureTooltip();
+    createHelpTooltip();
+}
+
+map.on('pointermove', pointerMoveHandler);

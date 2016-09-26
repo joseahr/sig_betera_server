@@ -3,39 +3,34 @@ const router    = express.Router();
 
 const db = require('../db').db;
 
-/*const SphericalMercator = require('sphericalmercator');
+router
+.route('/:id_layer')
+.get( (req, res)=>{
+    if(!req.user) return res.status(500).json('No capas asignadas');
 
-router.get('/vector-tiles/:layername/:z/:x/:y.pbf', (req, res)=>{
-    let mercator = new SphericalMercator({
-        size: 256 //tile size
-    });
+    db.users.roles.hasPerms(req.user.id, req.params.id_layer, 'r', 'e', 'd')
+    .then(hasPerms =>{
 
-    var bbox = mercator.bbox(
-        +req.params.x,
-        +req.params.y,
-        +req.params.z,
-        false,
-        '25830'
-    )
-});
-*/
+        db.users.roles.getRol(req.user.id, req.params.id_layer)
+        .then(rol =>{
+            db.users.layers.getLayerNames(req.params.id_layer)
+            .then(layerName => {
 
-router.get('/', (req, res)=>{
-    if(!req.user)
-        return res.status(400).json('No tiene acceso');
-    db.users.roles.getLayerNamesByPerms(req.user.id, 'r', 'e', 'd')
-    .then( layerNames =>{
-        if(!layerNames.length) return res.status(400).json('No tiene acceso');
-        Promise.all(layerNames.map(l => db.users.layers.getLayerAsGeoJSON(l.name)))
-            .then(layers => {
-                layers.forEach( l =>{
-                    let rol = layerNames.find( ln => ln.name === l.layerName ).rol;
-                    l.rol = rol;
+                layerName = layerName[0];
+
+                if(layerName.name && !hasPerms) return res.status(200).json(layerName.name);
+
+                db.users.layers.getLayerAsGeoJSON(layerName.name)
+                .then(layerGeoJSON =>{
+                    layerGeoJSON.rol = rol;
+                    res.status(200).json(layerGeoJSON);
                 });
-                res.status(200).json(layers); 
-            })
-            .catch(err => { res.status(500).json(err) });
+
+            });
+        });
     })
+    .catch(err => res.status(500).json(err));
+
 });
 
 module.exports = router;

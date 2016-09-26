@@ -19,6 +19,7 @@ const expressSession = require('express-session');
 const routes = require('./routes/index');
 const users = require('./routes/users');
 const raster = require('./routes/raster');
+const maps = require('./routes/maps');
 const layers = require('./routes/layers');
 
 // Objeto app express
@@ -68,6 +69,7 @@ app.use((req, res, next)=>{
 app.use('/', routes);
 app.use('/usuarios', users);
 app.use('/raster', raster);
+app.use('/usuarios/mapas', maps);
 app.use('/usuarios/capas', layers);
 
 // catch 404 and forward to error handler

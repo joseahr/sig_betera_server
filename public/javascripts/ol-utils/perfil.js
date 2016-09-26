@@ -79,7 +79,8 @@ var stylePointPerfil = [
 ];
 
 // Control en la barra principal
-var controlPerfil = new ol.control.Toggle({	
+var controlPerfil = new ol.control.Toggle({
+    name : 'perfil',
     html: '<i class="fa fa-area-chart"></i>',
     interaction : new ol.interaction.Draw({	
         type: 'LineString',
@@ -89,6 +90,15 @@ var controlPerfil = new ol.control.Toggle({
         vectorProfile.getSource().clear();
         vectorProfile.getSource().changed();
         $('#modal-perfil').closeModal();
+
+        if(!this.getActive()) return;
+        mainbar.getControls().forEach(function(control){
+            if(control.name !== 'perfil' && control.name){
+                console.log('control', control.name);
+                control.setActive(false);
+                control.onToggle.call(control);
+            }
+        });
     },
     tooltip : {
         text : 'Herramienta de perfil',

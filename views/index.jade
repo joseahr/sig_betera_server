@@ -73,15 +73,19 @@ block script
 		
 		$('#login').keyup(onEnterKeyLoginForm);
 
-		$('#submit-login').bind('click', onSubmitLogin);
+		$('#login').submit(onSubmitLogin);
+
+		$('#submit-login').bind('click', function(){ $('#login').submit(); })
 
 		function onEnterKeyLoginForm(e){
 			if(e.which == 13){
-				$('#submit-login').trigger('click');
+				$('#login').submit();
 			}
 		}
 
-		function onSubmitLogin(){
+		function onSubmitLogin(e){
+			console.log('form submit');
+			e.preventDefault();
 			$('#submit-login').attr('disabled', 'disabled');
 			var xhr = new XMLHttpRequest();
 			xhr.open('POST', '/usuarios/login', false);

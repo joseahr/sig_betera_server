@@ -73,7 +73,8 @@ module.exports = {
         getLayerNamesByPerms : sql('roles/user-layers.sql'),
         hasPerm : sql('roles/has-perm.sql'),
         addPerm : sql('roles/add-perm.sql'),
-        updatePerm : sql('roles/update-perm.sql')
+        updatePerm : sql('roles/update-perm.sql'),
+        getRol : sql('roles/get-rol.sql')
     },
     maps : {
         createMapsTable : sql('maps/create.sql'),

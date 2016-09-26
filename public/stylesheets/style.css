@@ -59,3 +59,19 @@ html, body, #map {
 .track-info div, .point-info div {
   font-size : 0.8em !important;
 }
+
+.ol-layerswitcher .panel li label {
+  max-width: 80%;
+}
+
+.ol-layerswitcher .panel li:first label {
+  color : #ffbb00;
+}
+
+.tooltip {
+  color : #000;
+}
+
+.tooltip-measure {
+  border : 1px dashed #000;
+}

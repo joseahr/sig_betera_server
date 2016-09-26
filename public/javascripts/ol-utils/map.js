@@ -84,14 +84,41 @@ function onHoverOut(){
     $('.coords-scale-container').css('visibility', 'hidden');
 }
 
+var interactionDraw;
+var interactionModify;
 map.addControl(new ol.control.LayerSwitcher({
     target : $('#layerSwitcher').get(0),
     oninfo : function(l){
-        console.log(l);
+        l.getSource().forEachFeature(function(f){
+            var fn = function(){
+                //console.log('props', f.getProperties().gid);
+            }
+            window.setTimeout(fn, 0);
+        });
+        if(l.get('rol') !== 'e' && l.get('rol') !== 'd')
+            return Materialize.toast('No tiene permisos para editar la capa ' + l.get('name'), 2500);
+        l.getVisible(true);
+        var geomColumnType = l.get('geomColumnType');
+        interactionDraw = new ol.interaction.Draw({
+            source : l.getSource(),
+            type : (geomColumnType == 'MULTIPOLYGON' 
+                ? 'Polygon'
+                : geomColumnType == 'MULTILINESTRING'
+                ? 'LineString'
+                : 'Point')
+        });
+        interactionModify = new ol.interaction.Modify({
+            features: l.getSource().getFeaturesCollection(),
+            deleteCondition: function(event) {
+            return /*ol.events.condition.shiftKeyOnly(event) &&*/ ol.events.condition.singleClick(event);
+            }
+        });
+        map.addInteraction(interactionDraw);
+        map.addInteraction(interactionModify);
     },
-    extent : true,
-    //trash  : true,
+    /*extent : true,
+    trash  : true,
     onextent : function(l){
         map.getView().fit(l.getSource().getExtent(), map.getSize());
-    }
+    }*/
 }));

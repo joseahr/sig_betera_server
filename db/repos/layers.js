@@ -37,18 +37,21 @@ module.exports = (rep, pgp) => {
             return this.getLayerSchema(layerName)
             .then( schema =>{
                 // Obtenemos todas las columnas de la Tabla (schema)
-                let geomColumn = schema.find( col=> col.type === 'USER-DEFINED' && col.udt === 'geometry' );
+                let geomColumn = schema.find( col=> col.type === 'USER-DEFINED' && col.udt === 'geometry' ).name;
                 // Obtenemos la columna de Geometría (para ello nos fijamos en el udt_name)
-                let properties = schema.filter( col => col.name !== geomColumn.name );
+                let properties = schema.filter( col => col.name !== geomColumn );
                 //console.log('geomColum :', geomColumn, 'properties :', properties)
                 return rep.one(sql.getLayerAsGeoJSON, {
-                    geomColumn : pgp.as.name(geomColumn.name),
+                    geomColumn : pgp.as.name(geomColumn),
                     properties : properties.map(prop => pgp.as.name(prop.name)).join(),
                     layerName,
                 })
                 // Devolvemos un objeto 
                 // {layerName : 'Nombre de la capa', layer : 'Capa en formato GeoJSON'}
-                .then( layer => ({ layerName, layer : layer.result }))
+                .then( layer =>{
+                    return this.getLayerGeometryType(layerName, geomColumn)
+                    .then(geomColumnType => ({ layerName, geomColumnType, layer : layer.result }))
+                })
             })
         }
     };
