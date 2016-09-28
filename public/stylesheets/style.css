@@ -69,9 +69,15 @@ html, body, #map {
 }
 
 .tooltip {
-  color : #000;
+  color : #fff;
+  background: rgba(0,0,0,0.5);
 }
 
 .tooltip-measure {
   border : 1px dashed #000;
+  background: rgba(255,255,255,0.5);
+}
+
+#modal-editar {
+  max-height : 25%;
 }

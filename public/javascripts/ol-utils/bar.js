@@ -1,8 +1,4 @@
-//  Vector layer
-//var vector = new ol.layer.Vector( { source: new ol.source.Vector() });
-//map.addLayer(vector);
 
-// Barra de control principal -- Alamcenará todos los controles
 
 var vectorMeasure = new ol.layer.Vector({
     name : 'vector medir',
@@ -16,11 +12,11 @@ map.addControl(mainbar);
 
 var measureBar = new ol.control.Toggle({
     name : 'medir',	
-    html: '<i class="fa fa-edit"></i>',
+    html: '<i class="material-icons" style="font-size : 20px;">border_color</i>',
     tooltip : {
         text : 'Medir',
         delay : 50,
-        position : 'right'
+        position : 'left'
     },
     onToggle : function(){
 
@@ -37,6 +33,13 @@ var measureBar = new ol.control.Toggle({
         map.removeOverlay(lastTooltip);
 
         if(!this.getActive()) return;
+        if(isEditingMode()) {
+            this.setActive(false);
+            this.onToggle.call(this);
+            Materialize.toast('No puede usar este control cuando está editando una capa', 2500);
+            return;
+        }
+
         mainbar.getControls().forEach(function(control){
             if(control.name !== 'medir' && control.name){
                 console.log('control', control.name);
@@ -52,16 +55,16 @@ var measureSubBar = new ol.control.Bar();
 
 var controlLineMeasure = new ol.control.Toggle({
     name : 'medir longitud',
-    html: '<i class="fa fa-share-alt"></i>',
+    html: '<i class="material-icons">timeline</i>',
     tooltip : {
         text : 'Longitud',
         delay : 50,
         position : 'left'
     },
-    className: "noToggle",
+    className: "",
     onToggle: function(){
-        if(this.getActive())
-            $(this.element).find('i').css('color', 'rgba(60, 136, 0, 0.7)')
+        if(this.getActive()){
+            $(this.element).find('i').css('color', 'rgba(60, 136, 0, 0.7)')}
         else
             $(this.element).find('i').css('color', 'rgba(0, 60, 136, 0.5)');
 
@@ -88,13 +91,13 @@ var controlLineMeasure = new ol.control.Toggle({
 });
 
 var controlPolygonMeasure = new ol.control.Toggle({	
-    html: '<i class="fa fa-bookmark-o fa-rotate-270" ></i>',
+    html: '<i class="material-icons">bookmark</i>',
     tooltip : {
         text : 'Área',
         delay : 50,
         position : 'bottom'
     },
-    className: "noToggle",
+    className: "",
     onToggle: function() {
         if(this.getActive())
             $(this.element).find('i').css('color', 'rgba(60, 136, 0, 0.7)')
@@ -124,21 +127,26 @@ var controlPolygonMeasure = new ol.control.Toggle({
 });
 
 var undoLastPointMeasureControl = new ol.control.Toggle({	
-    html: '<i class="fa fa-mail-reply"></i>',
-    className: "noToggle ol-text-button",
+    html: '<i class="material-icons">backspace</i>',
+    className: "noToggle",
     tooltip : {
         text : 'Eliminar último punto',
         delay : 50,
         position : 'bottom'
     },
     onToggle: function(){
-        if(measureBar.getInteraction())
-            measureBar.getInteraction().removeLastPoint();
+        if(measureBar.getInteraction()){
+            try {
+                measureBar.getInteraction().removeLastPoint();
+                vectorMeasure.getSource().changed();               
+            } catch (e) {
+            }
+        }
     }
 });
 var finishDrawingMeasureControl = new ol.control.Toggle({	
-    html: 'Fin',
-    className: "noToggle ol-text-button",
+    html: '<i class="material-icons">done</i>',
+    className: "noToggle",
     tooltip : {
         text : 'Finalizar',
         delay : 50,
@@ -244,7 +252,7 @@ function createHelpTooltip(){
         helpTooltipElement.parentNode.removeChild(helpTooltipElement);
     }
     helpTooltipElement = document.createElement('div');
-    helpTooltipElement.className = 'chip hide-on-small-only tooltip hidden';
+    helpTooltipElement.className = 'chip tooltip hidden hide-on-med-and-slow';
     helpTooltip = new ol.Overlay({
         element: helpTooltipElement,
         offset: [15, 0],
@@ -302,7 +310,7 @@ function drawStart (evt){
 function drawEnd(){
 
     map.removeOverlay(helpTooltip);
-    measureTooltipElement.className = 'chip tooltip indigo-text darken-2 tooltip-static';
+    measureTooltipElement.className = 'chip indigo-text darken-2 tooltip-static tooltip-measure';
     measureTooltip.setOffset([0, -7]);
     lastTooltip = measureTooltip;
 

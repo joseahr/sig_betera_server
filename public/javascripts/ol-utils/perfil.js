@@ -81,7 +81,7 @@ var stylePointPerfil = [
 // Control en la barra principal
 var controlPerfil = new ol.control.Toggle({
     name : 'perfil',
-    html: '<i class="fa fa-area-chart"></i>',
+    html: '<i class="material-icons">terrain</i>',
     interaction : new ol.interaction.Draw({	
         type: 'LineString',
         source: vectorDibujarPerfil.getSource()
@@ -92,6 +92,13 @@ var controlPerfil = new ol.control.Toggle({
         $('#modal-perfil').closeModal();
 
         if(!this.getActive()) return;
+        if(isEditingMode()) {
+            this.setActive(false);
+            this.onToggle.call(this);
+            Materialize.toast('No puede usar este control cuando está editando una capa', 2500);
+            return;
+        }
+
         mainbar.getControls().forEach(function(control){
             if(control.name !== 'perfil' && control.name){
                 console.log('control', control.name);
@@ -129,18 +136,26 @@ mainbar.addControl (controlPerfil,
     new ol.control.Bar({	
         controls:[ 
             new ol.control.Toggle({	
-                html: '<i class="fa fa-mail-reply"></i>',
-                title: "Eliminar punto anterior",
-                className: "noToggle ol-text-button",
+                html: '<i class="material-icons">backspace</i>',
+                tooltip : {
+                    text : 'Eliminar punto anterior',
+                    delay : 50,
+                    position : 'left'
+                },
+                className: "noToggle",
                 onToggle: function(){
                     var interaction = controlPerfil.getInteraction();
                     interaction.removeLastPoint();
                 }
             }),
             new ol.control.Toggle({	
-                html: 'Fin',
-                title: "Finalizar el perfil",
-                className: "noToggle ol-text-button",
+                html: '<i class="material-icons">done</i>',
+                tooltip : {
+                    text : 'Finalizar',
+                    delay : 50,
+                    position : 'right'
+                },
+                className: "noToggle",
                 onToggle: function(){
                     controlPerfil.getInteraction().finishDrawing();
                 }

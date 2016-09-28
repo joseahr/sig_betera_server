@@ -29,13 +29,23 @@ block content
 			#perfil-container(style="padding-top : 15px;")
 		.modal-footer.grey.lighten-2
 			a.modal-action.modal-close.waves-effect.waves-red.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Cerrar')
-				i.fa.fa-close.red-text.darken-2
+				i.material-icons.red-text.darken-2 close
 			a.modal-action.waves-effect.waves-green.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Elige una opción de descarga')
-				i.fa.fa-download.green-text.darken-2
+				i.material-icons.green-text.darken-2 file_download
 			a#download-perfil.modal-action.waves-effect.waves-green.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Descargar Perfil como PNG')
 				span.font-size-1.indigo-text.darken-2.flow-text PNG
 			a#download-perfil-geojson.modal-action.waves-effect.waves-green.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Descargar LineStringZ como GeoJSON')
 				span.font-size-1.indigo-text.darken-2.flow-text GeoJSON
+	#modal-editar.modal.bottom-sheet
+		.modal-header.card-panel.indigo.darken-2(style="text-align : center; margin : 0px;")
+			h4.flow-text.white-text.text-darken-2(style="margin : 0px") Editar
+		.modal-content(style="padding : 0px;")
+			#editar-container(style="padding-top : 15px;")
+				table
+					tbody
+		.modal-footer.grey.lighten-2
+			a.modal-action.modal-close.waves-effect.waves-red.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Cerrar')
+				i.material-icons.red-text.darken-2 close
 	ul#slide-out.side-nav
 		li(style="background : url('/images/andromeda.jpg'); background-size : cover;")
 			.userView
@@ -70,7 +80,7 @@ block content
 		li
 			a.waves-effect(href='#!') Third Link With Waves
 	a(href="#slide-out" id="menu-lateral-btn" data-activates="slide-out" class="button-collapse tooltipped valign-wrapper" data-tooltip="Menú" data-delay="50" data-position="top" style="position : absolute; bottom : 0.5em; left : 0.5em;")
-		i.material-icons.prefix.circle.valign.indigo-text.darken-2.white(style="font-size : 3.5em;") account_circle
+		i.material-icons.prefix.circle.valign.indigo-text.darken-2.white(style="font-size : 3.5em;") menu
 block script
 	// jQuery
 	script(src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous")
@@ -92,6 +102,7 @@ block script
 	script(src="/javascripts/proj4js/dist/proj4.js")
 	// ol-utils
 	script(src="/javascripts/ol-utils/projs.js")
+	script(id="workerFeaturesProps" type="javascript/worker" src="/javascripts/ol-utils/workers/show_features_props.js")
 	script(src="/javascripts/ol-utils/map.js")
 	script(src="/javascripts/ol-utils/bar.js")
 	script(src="/javascripts/ol-utils/perfil.js")
@@ -111,96 +122,3 @@ block script
 		}, function(){
 			$(this).find('i').css('color', '#00bbff');
 		});
-
-		var perms;
-		var XHRPromise = function(method, url){
-			return new Bluebird(function(resolve, reject){
-				var xhr = new XMLHttpRequest();
-				xhr.open(method, url, true);
-				xhr.onreadystatechange = function(){
-					if(xhr.readyState === 4 && xhr.status < 400) resolve(JSON.parse(xhr.responseText));
-					else if(xhr.readyState === 4) reject(JSON.parse(xhr.responseText))
-				};
-				xhr.send(null);
-			});
-		}
-
-		var parser = new ol.format.GeoJSON();
-
-		XHRPromise('GET', '/usuarios/mapas')
-		.then(function(listOfMaps){
-			return listOfMaps.reduce(function(promise, mapa){
-				//console.log(mapa.mapName, mapVisible);
-				var groupCapasMap = new ol.layer.Group({
-					name: mapa.mapName,
-					format : new ol.format.GeoJSON(),
-					visible : true
-				});
-				map.addLayer(groupCapasMap);
-				mapVisible = false;
-				return promise.then(function(){
-					return Bluebird.all(
-						mapa.maplayerIds.map(function(mlId){ 
-							return XHRPromise('GET', '/usuarios/capas/' + mlId)
-							.then(function(capa){
-								addCapa(capa, groupCapasMap);
-							})
-							.catch(function(error){
-
-							});
-						})
-					)// Bluebird.all
-				})
-				.then(function(){
-					Materialize.toast('Mapa cargado : ' + mapa.mapName, 2500);
-				})
-			}, Bluebird.resolve(null))
-		})
-		.catch(function(err){
-			console.log(err);
-		});
-
-		var capas = [];
-
-		map.getView().on('change:resolution', function(){
-			//console.log(map.getView().getZoom());
-			if(map.getView().getZoom() < 14){
-				capas.forEach(function(c){ c.setVisible(false); });
-				return;
-			}
-			capas.forEach(function(c){ c.setVisible(true); });
-		});
-
-		function addCapa(capa, group){
-			console.log(capa.geomColumnType, 'capa');
-			if(typeof capa === 'string'){
-				return;
-			}
-			//console.log('Añadiendo capa:', capa.layerName, 'al grupo: ', group.get('name'));
-			
-			var vector = new ol.layer.Vector({
-				name : capa.layerName,
-				geomColumnType : capa.geomColumnType,
-				rol  : capa.rol,
-				visible : false,
-				strategy : ol.loadingstrategy.bbox,
-				source : new ol.source.Vector({
-					// Ponerlo en false para obtener FeatureCollection en 
-					// la interacción Modify. Con esto puesto en true, el 
-					// método source.getFeaturesCollection() devolverá null
-					useSpatialIndex : false,
-					features : parser.readFeatures(capa.layer)
-				})
-			});
-			
-			capas.push(vector);
-			group.getLayers().extend([vector]);
-
-			// Capas que queremos arriba del todo
-			map.getLayers().forEach(function(l, i){
-				if(l.get('name') == 'Perfil LineStringZ' || l.get('name') == 'vector medir'){
-					map.getLayers().getArray().splice(i, 1);
-					map.getLayers().getArray().push(l);
-				}
-			});
-		}
