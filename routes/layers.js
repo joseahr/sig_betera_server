@@ -6,26 +6,25 @@ const db = require('../db').db;
 router
 .route('/:id_layer')
 .get( (req, res)=>{
-    if(!req.user) return res.status(500).json('No capas asignadas');
-
-    db.users.roles.hasPerms(req.user.id, req.params.id_layer, 'r', 'e', 'd')
+    //if(!req.user) return res.status(500).json('No capas asignadas');
+    var id = req.user ? req.user.id : null;
+    // Enviamos consulta para saber si tiene permisos sobre la capa
+    db.users.roles.hasPerms(id, req.params.id_layer, 'e', 'd')
     .then(hasPerms =>{
-
-        db.users.roles.getRol(req.user.id, req.params.id_layer)
+        // hasPerms devuelve true o false
+        // Buscamos qué rol tiene sobre la capa
+        db.users.roles.getRol(id, req.params.id_layer)
         .then(rol =>{
+            // Qué nombre tiene la capa
             db.users.layers.getLayerNames(req.params.id_layer)
             .then(layerName => {
-
                 layerName = layerName[0];
-
-                if(layerName.name && !hasPerms) return res.status(200).json(layerName.name);
-
+                // Obtener la capa como GeoJSON
                 db.users.layers.getLayerAsGeoJSON(layerName.name)
                 .then(layerGeoJSON =>{
-                    layerGeoJSON.rol = rol;
+                    layerGeoJSON.rol = hasPerms ? rol : 'r';
                     res.status(200).json(layerGeoJSON);
                 });
-
             });
         });
     })

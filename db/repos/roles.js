@@ -19,10 +19,10 @@ module.exports = (rep, pgp) => {
         // Comprobar si un usuario tiene permisos en una capa 
         hasPerms : (id_user, id_layer, ...roles)=>
             rep.oneOrNone(sql.hasPerm, {
-                id_user : pgp.as.value(id_user),
+                id_user : pgp.as.value(id_user || 0),
                 id_layer : pgp.as.value(id_layer),
                 roles
-            }, hasPerm => hasPerm.exists),
+            }, hasPerm => hasPerm ? hasPerm.exists : null),
         // Añade permisos a un usuario en una capa
         addPerm : (id_user, id_layer, rol)=>
             rep.none(sql.addPerm, {
@@ -38,7 +38,7 @@ module.exports = (rep, pgp) => {
         // Obtener el rol de un usuario en una capa
         getRol : (id_user, id_layer)=>
             rep.oneOrNone(sql.getRol, {
-                id_user : pgp.as.value(id_user),
+                id_user : pgp.as.value(id_user || 0),
                 id_layer : pgp.as.value(id_layer)
             }, rol => rol ? rol.rol : undefined),
     };

@@ -1,8 +1,6 @@
 extends layout
 
 block link
-	// Font Awesome
-	link(rel="stylesheet" href="/stylesheets/font-awesome/css/font-awesome.css")
 	// MaterializeCSS
 	link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css")
 	// Materialize Icons
@@ -10,14 +8,15 @@ block link
 	// Custom Css
 	link(rel="stylesheet" href="/stylesheets/style.css")
 block header
-	head 
-		nav.indigo.darken-3
-			.container
-				.nav-wrapper
-					a.brand-logo SIG Bétera
-					ul#nav-mobile.right.hide-on-med-and-down
-						li
-							a(href="/visor") Visor
+	head
+		.navbar-fixed
+			nav.indigo.darken-3
+				.container
+					.nav-wrapper
+						a.brand-logo SIG Bétera
+						ul#nav-mobile.right.hide-on-med-and-down
+							li
+								a(href="/visor") Visor
 block content
 	.parallax-container
 		.parallax
@@ -31,9 +30,9 @@ block content
 			.col.s12.m12.l6
 				.card-panel.indigo.darken-3
 					p.flow-text.center-align.white-text.darken-3 Visualizador Público
-				.row.card-panel.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em;")
+				.row.card-panel.hoverable.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em; padding : 10px;")
 					.col.s12.valign-wrapper(style="height : 150px;")
-						p.flow-text.center-align.indigo-text.lighten-3.valign
+						p.center-align.indigo-text.lighten-3.valign
 							|  Los mapas públicos accesibles para todos los ciudadanos y empresas son entre otros : Callejero, Histórico de ortofotografías, Urbanismo, ...
 				.center-align(style="margin-top : 1em; margin-bottom : 1em; margin-right : 0.75em; margin-left : 0.75em;")
 					a.waves-effect.waves-light.btn(style="margin : 0px auto" href="/visor")
@@ -42,17 +41,17 @@ block content
 			.col.s12.m12.l6
 				.card-panel.indigo.darken-3
 					p.flow-text.center-align.white-text.darken-3 Visualizador Restringido
-				.row.card-panel.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em;")
+				.row.card-panel.hoverable.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em; padding : 10px;")
 					form#login.col.s12.valign-wrapper(style="height : 150px;")
 						.row.valign(style="margin : 0px auto;")
 							.input-field.col.s12.m6
 								i.material-icons.prefix account_circle
 								input.validate#icon_prefix(type='text' name="username_email")
-								label(for='icon-prefix') E-mail o Usuario
+								label.truncate(for='icon-prefix') Email o Usuario
 							.input-field.col.s12.m6
 								i.material-icons.prefix vpn_key
 								input.validate#icon_prefix(type='password' name='password')
-								label(for='icon-prefix') Contraseña
+								label.truncate(for='icon-prefix') Contraseña
 				.center-align(style="margin-top : 1em; margin-bottom : 1em; margin-right : 0.75em; margin-left : 0.75em;")
 					a#submit-login.waves-effect.waves-light.btn(style="margin : 0px auto")
 						i.material-icons.right send

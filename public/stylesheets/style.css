@@ -41,10 +41,10 @@ html, body, #map {
     right: 0.5;
 }
 
-.coords-scale-container {
+/*.coords-scale-container {
   visibility : hidden;
   pointer-events: none;
-}
+}*/
 
 .layerswitcher-opacity {
   width : 75% !important;
@@ -78,6 +78,19 @@ html, body, #map {
   background: rgba(255,255,255,0.5);
 }
 
-#modal-editar {
-  max-height : 25%;
+#modal-editar, #modal-perfil {
+  max-height : 50%;
+  min-height: 35%;
+}
+
+table td, table th {
+  text-align: center;
+}
+
+.modal {
+  z-index : 0 !important;
+}
+
+.side-nav {
+  z-index : 1;
 }

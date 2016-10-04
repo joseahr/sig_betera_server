@@ -22,7 +22,11 @@ module.exports = (rep, pgp) => {
             rep.manyOrNone(sql.getMaps, {
                 id_user : pgp.as.value(id_user)
             })
-            .then(maps => maps.length ? maps.map( m => m.id_map ) : undefined),
+            .then(maps => maps.length ? maps.map( m => m.id_map) : undefined),
+
+        getDefaultMaps : () =>
+            rep.manyOrNone(sql.getDefaultMaps)
+            .then(maps => maps.length ? maps.map( m => m.id ) : undefined),
         // Obtener el nombre de todos los mapas
         getMapNames : (...ids)=> 
             rep.manyOrNone(sql.getMapNames, {ids})
@@ -37,8 +41,12 @@ module.exports = (rep, pgp) => {
         // En ciertas capas del mapa puede no tener permisos de lectura
         // y habría que dárselos para que pudiera ver la capa
         getMapsAndLayers : function(id_user){
-            return this.getMaps(id_user)
+            let promise = id_user
+                ? this.getMaps(id_user)
+                : this.getDefaultMaps();
+            return promise
             .then(listOfMaps =>{
+                console.log(listOfMaps, 'lisssssst');
                 if(!listOfMaps) return Promise.resolve(null);
                 return rep.tx( t =>{
                     return t.batch(listOfMaps.map(this.getLayers))

@@ -6,7 +6,10 @@ module.exports = (rep, pgp) => {
     return {
         createTable : ()=>
             rep.none(sql.create),
-
+        
+        // GET TILE
+        getTile : (layer, bbox)=>
+            rep.one(),
 
         // Devuelvo el tipo de Geometría
         getLayerGeometryType : (layerName, geomColumn)=>

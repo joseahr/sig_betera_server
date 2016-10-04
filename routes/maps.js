@@ -41,8 +41,8 @@ router.get('/vector-tiles/:layername/:z/:x/:y.pbf', (req, res)=>{
 router
 .route('/')
 .get( (req, res)=>{
-    if(!req.user) return res.status(500).json('Ninguna capa asignada');
-    db.users.maps.getMapsAndLayers(req.user.id)
+    let id = req.user ? req.user.id : null;
+    db.users.maps.getMapsAndLayers(id)
     .then( mapsAndLayers => res.status(200).json(mapsAndLayers) )
     .catch( err => res.status(500).json(err) );
 });

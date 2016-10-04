@@ -7,8 +7,6 @@ block link
 	link(rel="stylesheet" href="/javascripts/ol3-ext/control/profilcontrol.css")
 	link(rel="stylesheet" href="/javascripts/ol3-ext/control/controlbar.css")
 	link(rel="stylesheet" href="/javascripts/ol3-ext/control/layerswitchercontrol.css")
-	// Font Awesome
-	link(rel="stylesheet" href="/stylesheets/font-awesome/css/font-awesome.css")
 	// MaterializeCSS
 	link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css")
 	// Materialize Icons
@@ -17,11 +15,43 @@ block link
 	link(rel="stylesheet" href="/stylesheets/style.css")
 block content
 	#map
-	.coords-scale-container.collection(style='position : absolute; right : 0.5em; bottom : 2.15em; height : auto; max-width : 50%; margin : 0px;')
-		.collection-item.flow-text.center-align.indigo.darken-2.font-size-1(style='color : white; padding : 0.15em;') ETRS89 UTM H30
-		#coords25830.collection-item(style='padding : 0.15em;')
-		.collection-item.flow-text.center-align.indigo.darken-2.font-size-1(style='color : white; padding : 0.15em;') ETRS89 Geográficas
-		#coords4258.collection-item(style='padding : 0.15em;')
+		// Menú lateral
+		ul#slide-out.side-nav.fixed
+			a#close-sidenav(href="#" style="position : absolute ; right : 0em; top : 0em; font-size : 2em; z-index : 1;" class="material-icons red-text hide-on-large-only") clear
+			li(style="background : url('http://www.betera.com/wp-content/uploads/policia-local-31.jpg'); background-size : 150%;")
+				.userView
+					a()
+						i.material-icons.prefix.circle.white-text.darken-2(style="font-size : 5em;") account_circle
+					if (user)
+						a()
+							span.black-text.name #{user.name}
+						a(href='#!email')
+							span.black-text.email #{user.email}
+					else
+						a()
+							span.black-text.name Usuario Invitado
+						a()
+							span.black-text.email -----			
+
+			li
+				a(href='/') Inicio
+			li
+				.divider
+			li.no-padding
+				ul.collapsible.collapsible-accordion
+					li
+						a.collapsible-header
+							| Mapas
+							i.material-icons arrow_drop_down
+						.collapsible-body#layerSwitcher
+			li
+				.divider
+			li
+				a.waves-effect(href='#!') Imprimir Mapa
+			li
+				.divider
+			li
+				a.subheader Footer Prueba
 	#modal-perfil.modal.bottom-sheet
 		.modal-header.card-panel.indigo.darken-2(style="text-align : center; margin : 0px;")
 			h4.flow-text.white-text.text-darken-2(style="margin : 0px") Perfil
@@ -36,51 +66,18 @@ block content
 				span.font-size-1.indigo-text.darken-2.flow-text PNG
 			a#download-perfil-geojson.modal-action.waves-effect.waves-green.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Descargar LineStringZ como GeoJSON')
 				span.font-size-1.indigo-text.darken-2.flow-text GeoJSON
-	#modal-editar.modal.bottom-sheet
+	#modal-feature.modal.bottom-sheet(style="max-width : 100%;")
 		.modal-header.card-panel.indigo.darken-2(style="text-align : center; margin : 0px;")
-			h4.flow-text.white-text.text-darken-2(style="margin : 0px") Editar
-		.modal-content(style="padding : 0px;")
-			#editar-container(style="padding-top : 15px;")
+			h4.flow-text.white-text.text-darken-2(style="margin : 0px") Información
+		.modal-content(style="padding : 0px; overflow-x : hidden;")
+			#editar-container(style="padding-top : 15px; overflow-x : scroll; max-width : 100%;")
 				table
+					thead
+					tfoot
 					tbody
 		.modal-footer.grey.lighten-2
 			a.modal-action.modal-close.waves-effect.waves-red.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Cerrar')
 				i.material-icons.red-text.darken-2 close
-	ul#slide-out.side-nav
-		li(style="background : url('/images/andromeda.jpg'); background-size : cover;")
-			.userView
-				a(href='#!user')
-					i.material-icons.prefix.circle.indigo-text.darken-2(style="font-size : 5em;") account_circle
-				if (user)
-					a(href='#!name')
-						span.white-text.name #{user.name}
-					a(href='#!email')
-						span.white-text.email #{user.email}
-				else
-					a(href='#!name')
-						span.white-text.name Usuario Invitado
-					a(href='#!email')
-						span.white-text.email -----			
-
-		li
-			a(href='#!') Link prueba
-		li
-			.divider
-		li.no-padding
-			ul.collapsible.collapsible-accordion
-				li
-					a.collapsible-header
-						| Capas
-						i.material-icons arrow_drop_down
-					.collapsible-body#layerSwitcher
-		li
-			.divider
-		li
-			a.subheader Footer Prueba
-		li
-			a.waves-effect(href='#!') Third Link With Waves
-	a(href="#slide-out" id="menu-lateral-btn" data-activates="slide-out" class="button-collapse tooltipped valign-wrapper" data-tooltip="Menú" data-delay="50" data-position="top" style="position : absolute; bottom : 0.5em; left : 0.5em;")
-		i.material-icons.prefix.circle.valign.indigo-text.darken-2.white(style="font-size : 3.5em;") menu
 block script
 	// jQuery
 	script(src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous")
@@ -101,24 +98,14 @@ block script
 	//proj4js
 	script(src="/javascripts/proj4js/dist/proj4.js")
 	// ol-utils
-	script(src="/javascripts/ol-utils/projs.js")
-	script(id="workerFeaturesProps" type="javascript/worker" src="/javascripts/ol-utils/workers/show_features_props.js")
-	script(src="/javascripts/ol-utils/map.js")
-	script(src="/javascripts/ol-utils/bar.js")
-	script(src="/javascripts/ol-utils/perfil.js")
-	script.
-		$(".button-collapse").sideNav({
-			edge : 'left',
-			closeOnClick : true
-		});
-		//$('#sidenav-overlay').remove();
-
-		$('.ol-scale-line').css('left', 'auto');
-		$('.ol-scale-line').css('right', '0.5em');
-		map.render();
-
-		$('#menu-lateral-btn').hover(function(){
-			$(this).find('i').css('color', '#000');
-		}, function(){
-			$(this).find('i').css('color', '#00bbff');
-		});
+	script(src="/javascripts/ol-utils/controls/mouse-position.js")
+	script(src="/javascripts/ol-utils/controls/side-menu.js")
+	script(src="/javascripts/ol-utils/controls/measure.js")
+	script(src="/javascripts/ol-utils/controls/perfil.js")
+	script(src="/javascripts/ol-utils/controls/select-control.js")
+	script(src="/javascripts/ol-utils/layers.js")
+	script(src="/javascripts/ol-utils/map-controller.js")
+	//script(src="/javascripts/ol-utils/projs.js")
+	//script(src="/javascripts/ol-utils/map.js")
+	//script(src="/javascripts/ol-utils/bar.js")
+	//script(src="/javascripts/ol-utils/controls/perfil.js")
