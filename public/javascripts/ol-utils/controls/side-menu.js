@@ -37,7 +37,7 @@ ol.control.SideMenu = function(opts){
                     $(this).css('transform', 'translateX(' + (-now)+ 'px)');
                     opts.mapController.updateSize('left', (300 - now) + 'px');
                 },
-                duration : 600
+                duration : 400
             });
             icon.addClass('indigo-text').removeClass('red-text');
         }
@@ -47,7 +47,7 @@ ol.control.SideMenu = function(opts){
                     $(this).css('transform', 'translateX(' + (-300 + now) + 'px)');
                     opts.mapController.updateSize('left', now + 'px');
                 },
-                duration : 600
+                duration : 400
             });
             icon.addClass('red-text').removeClass('indigo-text');
         }

@@ -11,11 +11,17 @@ let callback = (req, username, password, done)=>{
     */
     let func = ()=>
         // Buscamos al usuario por "name" 
-        db.users.findBy('name', username)
+        Promise.all([
+            db.users.findBy('name', username),
+            db.users.findBy('email', username)
+        ])
         .then( user=>{
-            if(!user.length) done(null, false, 'Usuario no encontrado');
+            user = user[0].length 
+                ? user[0][0] : user[1].length 
+                ? user[1][0] : false;
+
+            if(!user) done(null, false, 'Usuario no encontrado');
             else {
-                user = user[0];
                 console.log('usuario encontrado en la bdd', user, password);
                 db.users.validPassword(user, password)
                 .then(validPassword =>{

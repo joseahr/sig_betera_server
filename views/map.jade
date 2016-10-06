@@ -11,6 +11,8 @@ block link
 	link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css")
 	// Materialize Icons
 	link(href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet")
+	// DynaTable
+	link(rel="stylesheet" href="/javascripts/dynatables/jquery.dynatable.css")
 	// Custom CSS
 	link(rel="stylesheet" href="/stylesheets/style.css")
 block content
@@ -70,11 +72,6 @@ block content
 		.modal-header.card-panel.indigo.darken-2(style="text-align : center; margin : 0px;")
 			h4.flow-text.white-text.text-darken-2(style="margin : 0px") Información
 		.modal-content(style="padding : 0px; overflow-x : hidden;")
-			#editar-container(style="padding-top : 15px; overflow-x : scroll; max-width : 100%;")
-				table
-					thead
-					tfoot
-					tbody
 		.modal-footer.grey.lighten-2
 			a.modal-action.modal-close.waves-effect.waves-red.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Cerrar')
 				i.material-icons.red-text.darken-2 close
@@ -85,6 +82,8 @@ block script
 	script(src="/javascripts/ol3/ol-debug.js")
 	// MaterializeCSS (Google)
 	script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js")
+	//Dynamic Tables
+	script(src="/javascripts/dynatables/jquery.dynatable.js")
 	// ol3-ext 
 	script(src="/javascripts/ol3-ext/interaction/drawregularinteraction.js")
 	script(src="/javascripts/ol3-ext/control/profilcontrol.js")
@@ -103,6 +102,7 @@ block script
 	script(src="/javascripts/ol-utils/controls/measure.js")
 	script(src="/javascripts/ol-utils/controls/perfil.js")
 	script(src="/javascripts/ol-utils/controls/select-control.js")
+	script(src="/javascripts/ol-utils/controls/gps.js")
 	script(src="/javascripts/ol-utils/layers.js")
 	script(src="/javascripts/ol-utils/map-controller.js")
 	//script(src="/javascripts/ol-utils/projs.js")

@@ -21,6 +21,7 @@ const users = require('./routes/users');
 const raster = require('./routes/raster');
 const maps = require('./routes/maps');
 const layers = require('./routes/layers');
+const admin = require('./routes/admin');
 
 // Objeto app express
 const app = express();
@@ -71,6 +72,7 @@ app.use('/usuarios', users);
 app.use('/raster', raster);
 app.use('/usuarios/mapas', maps);
 app.use('/usuarios/capas', layers);
+app.use('/admin', admin);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

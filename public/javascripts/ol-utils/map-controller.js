@@ -74,7 +74,8 @@ function MapController(){
   	    center 	   : [718235.466608, 4385207.688928]
     });
 
-	this.map = new ol.Map({
+    this.map = new ol.Map({
+        preload : Infinity,
         layers 	: [ groupCapasBase, this.selectedFeatures],
         target 	: 'map',
         controls: ol.control.defaults({ attribution : false }),
@@ -93,13 +94,25 @@ function MapController(){
         this.map.render();
     }
 
+    this.geolocation = new ol.Geolocation({
+        projection: this.map.getView().getProjection(),
+        trackingOptions: {
+            maximumAge: 10000,
+            enableHighAccuracy: true,
+            timeout: 600000
+        }
+    });
     this.map.addControl(new ol.control.MousePositionBetera({ mapController : this }));
     this.map.addControl(new ol.control.SideMenu({ mapController : this }));
     this.mainbar = new ol.control.Bar();
     MeasureControl(this);
     SelectControl(this);
     PerfilControl(this);
+    GeolocationControl(this);
     this.map.addControl(this.mainbar);
+    this.map.addControl(new ol.control.FullScreen({
+        source: $('body').get(0)
+    }));
 
     this.map.addControl(new ol.control.CanvasScaleLine());
     //$('.ol-scale-line').css('left', 'auto');
@@ -231,7 +244,9 @@ MapController.prototype.addLayer = function(capa, group){
     // estas capas son las que se usan en las herramientas de
     // perfil y medición (No se mostrarán en el LayerSwitcher)
     self.map.getLayers().forEach(function(l, i){
-        if(l.get('name') == 'Perfil LineStringZ' || l.get('name') == 'vector medir' || l.get('name') == 'features selected'){
+        if(l.get('name') == 'Perfil LineStringZ' || l.get('name') == 'vector medir' 
+            || l.get('name') == 'features selected' || l.get('name') == 'position' 
+        ){
             self.map.getLayers().getArray().splice(i, 1);
             self.map.getLayers().getArray().push(l);
         }
@@ -252,20 +267,18 @@ MapController.prototype.loadMaps = function(){
     .then(function(listOfMaps){
         // Recorremos la lista de mapas con reduce
         console.log(listOfMaps, 'lisst');
-        return listOfMaps.reduce(function(promise, mapa){
-            // Creamos un grupo de capas
-            // que contendrá todas las capas del mapa
-            console.log('mapa'. mapa);
-            var groupCapasMap = new ol.layer.Group({
-                name: mapa.mapName,
-                format : new ol.format.GeoJSON(),
-                visible : true
-            });
-            // Añadimos el grupo al mapa
-            self.map.addLayer(groupCapasMap);
-
-            // Encadenamos la promise anterior con la siguiente
-            return promise.then(function(){
+        return Bluebird.all(
+            listOfMaps.map(function(mapa){
+                // Creamos un grupo de capas
+                // que contendrá todas las capas del mapa
+                console.log('mapa'. mapa);
+                var groupCapasMap = new ol.layer.Group({
+                    name: mapa.mapName,
+                    format : new ol.format.GeoJSON(),
+                    visible : true
+                });
+                // Añadimos el grupo al mapa
+                self.map.addLayer(groupCapasMap);
                 // Utilizamos Promise.all para obtener todas las capas del mapa
                 return Bluebird.all(
                     // Recorremos la lista de ids de las capas con map
@@ -288,12 +301,12 @@ MapController.prototype.loadMaps = function(){
                         });
                     }) // mapa.maplayerIds.map(...)
                 ) // Bluebird.all
-            }) // promise.then(...)
-            .then(function(){
-                // Mostramos mensaje mapa cargado
-                Materialize.toast('Mapa cargado : ' + mapa.mapName, 2500);
+                .then(function(){
+                    // Mostramos mensaje mapa cargado
+                    Materialize.toast('Mapa cargado : ' + mapa.mapName, 2500);
+                })
             })
-        }, Bluebird.resolve(null) /* Valor inicial para reduce */)
+        );
     }) // XHRPromise(...).then(...)
     .then(function(){
         // Cuando cambia el Zoom del mapa
@@ -301,7 +314,7 @@ MapController.prototype.loadMaps = function(){
             // Si el zoom es menor que @MIN_ZOOM_SHOW_LAYERS
             if(self.map.getView().getZoom() < self.MIN_ZOOM_SHOW_LAYERS){
                 // Recorremos nuestras capas editables
-                capas.forEach(function(c, i){
+                self.layers.forEach(function(c, i){
                     // Si alguna está visible
                     if (c.getVisible()){
                         // Añadimos esa capa a la lista @capasQueTeniaVisibles
@@ -344,3 +357,7 @@ MapController.prototype.loadMaps = function(){
 
 var mapController = new MapController();
 mapController.loadMaps();
+
+$('body').resize(function(){
+    console.log('fullscreen');
+})

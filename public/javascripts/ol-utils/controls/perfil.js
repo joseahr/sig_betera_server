@@ -303,13 +303,6 @@ function PerfilControl(mapController){
         $('<a href="#modal-perfil">').leanModal({
             dismissible: false, // Modal can be dismissed by clicking outside of the modal
             opacity: 0, // Opacity of modal background
-            in_duration: 300, // Transition in duration
-            out_duration: 200, // Transition out duration
-            starting_top: '4%', // Starting top style attribute
-            ending_top: '10%', // Ending top style attribute
-            ready: function() {
-                mapController.updateSize('bottom', $('#modal-perfil').innerHeight());
-            }, // Callback for Modal open
             complete: function() {
                 vectorProfile.getSource().clear();
                 vectorDibujarPerfil.getSource().changed();
@@ -317,6 +310,7 @@ function PerfilControl(mapController){
             } // Callback for Modal close
         }).trigger('click');
         $('.modal').css('padding-left', $('#map').css('padding-left') + 'px');
+        mapController.updateSize('bottom', $('#modal-perfil').height() - 10);
         // Eliminamos el efecto de overlay (Así podemos interactuar con el mapa sin cerrar el perfil)
         // Las propiedades dissmisable y opacity dejan de surtir efecto con esta acción
         $('.lean-overlay').remove();

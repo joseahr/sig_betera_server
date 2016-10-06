@@ -1,3 +1,16 @@
+function getTable(obj){
+    console.log('props', Object.keys(obj));
+    var str_ = '<table><thead>' + 
+        Object.keys(obj).reduce(function(str, k){
+            if(k != 'geometry' && k != 'layerName')
+                str += '<th>' + k + '</th>'
+            return str;
+        }, '') + 
+    '</thead><tbody></tbody></table>';
+    console.log(str_, $(str_));
+    return $(str_);
+}
+
 function SelectControl(mapController){
 
     var map = mapController.map;
@@ -42,6 +55,7 @@ function SelectControl(mapController){
     mainbar.addControl(controlSelect);
 }
 
+// Función para disp. móviles
 function handleSelectClick(e){
     var hayFeatures = false;
     var self = this;
@@ -90,109 +104,44 @@ function handleSelectClick(e){
     //alert('handle' + hayFeatures + self.sourceSelectedFeatures.getFeatures().length);
 
     if(!hayFeatures) return;
-
-    $('#modal-feature table').empty();
-    this.sourceSelectedFeatures.forEachFeature(function(f){
-        var props = f.getProperties();
-        var layerName = f.get('layerName');
-        $('#modal-feature table')
-        .append('<tr><td class="card-panel" style="background : rgba(48,63,159, 0.3); color : #fff;">' + layerName + '</td></tr>')
-        .append('<tr style="height : 5px;"></tr>')
-        .append(getTableHeader(props))
-        .append(
-            getTableRow(props)
-            .hover(function(){
-                this.style.cursor = 'pointer';
-                this.style.background = 'rgba(48,63,159, 0.3)';
-                this.style.color = '#fff';
-                self.sourceSelectedFeatures.clear();
-                self.sourceSelectedFeatures.addFeature(f);
-            }, function(){
-                this.style.color = '#000';
-                this.style.background = '#fff';
-                self.sourceSelectedFeatures.clear();
-            })
-            .click(function(){
-                var extent = f.getGeometry().getExtent();
-                self.map.getView().fit(extent, self.map.getSize());
-            })
-        )
-        .append('<tr style="height : 5px;"></tr>');
-    });
-    $('<a href="#modal-feature">').leanModal({
-        complete : function(){
-            self.updateSize('bottom', '0px');
-        }
-    }).trigger('click');
-    $('.lean-overlay').remove();
-    self.updateSize('bottom', $('#modal-feature').innerHeight());
+    showTable(self);
 }
 
+/******* 
+ * SELECT HOVERRRR
+ * 
+ * 
+ * 
+ */
+// Listener click mapa para seleccionar features hover
+var listenerClick;
+// función que se ejecita al hacer hover
 function handleSelect(e){
     var self = this;
-
+    // Eliminamos todas las features de la capa
     this.sourceSelectedFeatures.clear();
-
-    var listenerClick = this.map.once('click', function(){
-        if(!self.sourceSelectedFeatures.getFeatures().length) return;
-        $('#modal-feature table').empty();
-        self.sourceSelectedFeatures.forEachFeature(function(f){
-            var props = f.getProperties();
-            var layerName = f.get('layerName');
-            $('#modal-feature table')
-            .append('<tr><td class="card-panel" style="background : rgba(48,63,159, 0.3); color : #fff;">' + layerName + '</td></tr>')
-            .append('<tr style="height : 5px;"></tr>')
-            .append(getTableHeader(props))
-            .append(
-                getTableRow(props)
-                .hover(function(){
-                    this.style.cursor = 'pointer';
-                    this.style.background = 'rgba(48,63,159, 0.3)';
-                    this.style.color = '#fff';
-                    self.sourceSelectedFeatures.clear();
-                    self.sourceSelectedFeatures.addFeature(f);
-                }, function(){
-                    this.style.color = '#000';
-                    this.style.background = '#fff';
-                    self.sourceSelectedFeatures.clear();
-                })
-                .click(function(){
-                    var extent = f.getGeometry().getExtent();
-                    self.map.getView().fit(extent, self.map.getSize());
-                })
-            )
-            .append('<tr style="height : 5px;"></tr>');
-        });
-
-        $('<a href="#modal-feature">').leanModal({
-            complete : function(){
-                self.updateSize('bottom', '0px');
-            }
-        }).trigger('click');
-        $('.lean-overlay').remove();
-        self.updateSize('bottom', $('#modal-feature').innerHeight());
-    });
-
+    // Creamos el listener map.once()
+    createListenerClick(self);
+    // boolean que indica si se seleccionan feats o no
     var hayFeatures = false;
     this.layers.forEach(function(c){
         var source = c.getSource();
         var features = source.getFeaturesAtCoordinate(e.coordinate);
         //console.log(c.get('geomColumnType'));
+        // Solo hacemos esto para líneas y puntos, ya que la interaction.Select de OL-3
+        // no los selecciona "bien"
         if(!features.length && (c.get('geomColumnType') === 'LineString' || c.get('geomColumnType') === 'Point') ){
+            // Obtenemos la feature más cercana al punto clicado
             var feature = source.getClosestFeatureToCoordinate(e.coordinate);
-            //console.log(c.get('geomColumnType'), 'No features At coordinate', feature);
+            // Si hay feature
             if(feature){
                 var ext = feature.getGeometry().getExtent();
                 var cc = ol.extent.getCenter(ext);
+                // Calculamos la distancia al punto clicado
                 var distance = c.get('geomColumnType') === 'Point' 
-                    ? ol.sphere.WGS84.haversineDistance(
-                        ol.proj.transform(e.coordinate, 'EPSG:25830', 'EPSG:4326'),
-                        ol.proj.transform(cc, 'EPSG:25830', 'EPSG:4326') 
-                    )
-                    : ol.sphere.WGS84.haversineDistance(
-                        ol.proj.transform(feature.getGeometry().getClosestPoint(e.coordinate), 'EPSG:25830', 'EPSG:4326'),
-                        ol.proj.transform(e.coordinate, 'EPSG:25830', 'EPSG:4326')
-                    ); 
+                    ? distancePointPoint(e.coordinate, cc)
+                    : distancePointPoint(feature.getGeometry().getClosestPoint(e.coordinate), e.coordinate);
+
                 if(distance < 0.5) {
                     hayFeatures = true;
                     feature.set('layerName', c.get('name'));
@@ -222,4 +171,59 @@ function handleSelect(e){
         //sourceSelectedFeatures.clear();
     }
     //alert(hayFeatures);
+}
+
+function createListenerClick(self){
+    var listenerClick = self.map.once('click', function(){
+        if(!self.sourceSelectedFeatures.getFeatures().length) return;
+        showTable(self);
+    });
+}
+
+function distancePointPoint(clicked, dest){
+    return ol.sphere.WGS84.haversineDistance(
+        ol.proj.transform(clicked, 'EPSG:25830', 'EPSG:4326'),
+        ol.proj.transform(dest, 'EPSG:25830', 'EPSG:4326') 
+    );
+}
+
+function showTable(self){
+    $('#modal-feature .modal-content').empty();
+    self.sourceSelectedFeatures.forEachFeature(function(f){
+        var props = f.getProperties();
+        var layerName = f.get('layerName');
+        var table = getTable(props);
+        $('#modal-feature .modal-content')
+        .append('<div class="card-panel col s12" style="background : rgba(48,63,159, 0.3); padding : 10px; width : 100%; color : #fff;">' + layerName + '</div>')
+        .append('<div style="height : 5px;"></div>')
+        //.append(getTableHeader(props))
+        .append(table)
+        .append('<tr style="height : 5px;"></tr>');
+        table.find('tbody').append(
+            getTableRow(props)
+            .hover(function(){
+                this.style.cursor = 'pointer';
+                this.style.background = 'rgba(48,63,120, 0.3)';
+                this.style.color = '#fff';
+                self.sourceSelectedFeatures.clear();
+                self.sourceSelectedFeatures.addFeature(f);
+            }, function(){
+                this.style.color = '#000';
+                this.style.background = '#fff';
+                self.sourceSelectedFeatures.clear();
+            })
+            .click(function(){
+                var extent = f.getGeometry().getExtent();
+                self.map.getView().fit(extent, self.map.getSize());
+            })
+        )
+    });
+
+    $('<a href="#modal-feature">').leanModal({
+        complete : function(){
+            self.updateSize('bottom', '0px');
+        }
+    }).trigger('click');
+    $('.lean-overlay').remove();
+    self.updateSize('bottom', $('#modal-feature').innerHeight());
 }

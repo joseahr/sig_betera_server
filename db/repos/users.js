@@ -3,7 +3,7 @@
 const sql = require('../sql').users;
 
 const bluebird = require('bluebird');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt-nodejs');
 const compare = bluebird.promisify(bcrypt.compare);
 
 module.exports = (rep, pgp) => {
