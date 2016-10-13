@@ -65,7 +65,10 @@ module.exports = {
         getLayerAsGeoJSON : sql('layers/as-geojson.sql'),
         getLayerGeometryType : sql('layers/geometry-type.sql'),
         findBy: sql('layers/find-by.sql'),
-        getLayerNames : sql('layers/layer-names.sql')
+        getLayerNames : sql('layers/layer-names.sql'),
+        getBaseLayer : sql('layers/base-layer.sql'),
+        getAllLayers : sql('layers/get-all-layers.sql'),
+        getAllBaseLayers : sql('layers/get-all-base-layers.sql')
     },
     roles : {
         create : sql('roles/create.sql'),
@@ -85,7 +88,11 @@ module.exports = {
         getMaps : sql('maps/user-maps.sql'),
         getDefaultMaps : sql('maps/get-default-maps.sql'),
         getMapNames : sql('maps/map-names.sql'),
-        getLayers : sql('maps/get-layers.sql')
+        getLayers : sql('maps/get-layers.sql'),
+        getBaseLayers : sql('maps/get-base-layers.sql')
+    },
+    admin : {
+        getUsers : sql('admin/users-admin.sql')
     }
 };
 

@@ -1,0 +1,8 @@
+﻿UPDATE Layers SET oid = ('capas.' || a.table_name)::regclass::oid
+FROM (
+	SELECT table_name
+	FROM information_schema.tables
+	WHERE table_schema='capas'
+	AND table_type='BASE TABLE' 
+ ) a
+ WHERE name = a.table_name

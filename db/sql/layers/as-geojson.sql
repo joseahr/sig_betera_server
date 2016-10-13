@@ -4,4 +4,4 @@ SELECT row_to_json(fc)::json as result
     , ST_AsGeoJSON(lg.${geomColumn^})::json As geometry
     , row_to_json((SELECT l FROM (SELECT ${properties^}) As l
       ))::json As properties
-   FROM ${layerName~} As lg   ) As f )  As fc;
+   FROM "capas".${layerName~} As lg   ) As f )  As fc;

@@ -3,7 +3,10 @@ function GeolocationControl(mapController){
     var mainbar = mapController.mainbar;
     var map = mapController.map;
     var geolocation = mapController.geolocation;
-
+    geolocation.on('error', function(err){
+        alert(err);
+        console.log(err);
+    });
     var positionSource = new ol.source.Vector();
     var positionVector = new ol.layer.Vector({
         source : positionSource,

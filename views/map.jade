@@ -1,6 +1,8 @@
 extends layout
 
 block link
+	// jQuery UI
+	link(rel="stylesheet" href="/javascripts/jquery-ui/jquery-ui.min.css")
 	// Openlayers 3
 	link(rel="stylesheet" href="/javascripts/ol3/ol.css")
 	// ol3-ext
@@ -44,7 +46,7 @@ block content
 					li
 						a.collapsible-header
 							| Mapas
-							i.material-icons arrow_drop_down
+							i.material-icons(style="float : right; margin : 0px;") arrow_drop_down
 						.collapsible-body#layerSwitcher
 			li
 				.divider
@@ -54,30 +56,28 @@ block content
 				.divider
 			li
 				a.subheader Footer Prueba
-	#modal-perfil.modal.bottom-sheet
-		.modal-header.card-panel.indigo.darken-2(style="text-align : center; margin : 0px;")
+	#modal-perfil.modal.bottom-sheet.hoverable
+		.modal-header.card-panel.indigo.darken-2(style="text-align : center; margin : 0px; top: 0px;")
 			h4.flow-text.white-text.text-darken-2(style="margin : 0px") Perfil
 		.modal-content(style="padding : 0px;")
 			#perfil-container(style="padding-top : 15px;")
-		.modal-footer.grey.lighten-2
-			a.modal-action.modal-close.waves-effect.waves-red.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Cerrar')
-				i.material-icons.red-text.darken-2 close
+		.modal-footer.fixed.grey.lighten-2
 			a.modal-action.waves-effect.waves-green.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Elige una opción de descarga')
 				i.material-icons.green-text.darken-2 file_download
 			a#download-perfil.modal-action.waves-effect.waves-green.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Descargar Perfil como PNG')
 				span.font-size-1.indigo-text.darken-2.flow-text PNG
 			a#download-perfil-geojson.modal-action.waves-effect.waves-green.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Descargar LineStringZ como GeoJSON')
 				span.font-size-1.indigo-text.darken-2.flow-text GeoJSON
-	#modal-feature.modal.bottom-sheet(style="max-width : 100%;")
+	#modal-feature.modal.bottom-sheet.hoverable
 		.modal-header.card-panel.indigo.darken-2(style="text-align : center; margin : 0px;")
 			h4.flow-text.white-text.text-darken-2(style="margin : 0px") Información
 		.modal-content(style="padding : 0px; overflow-x : hidden;")
 		.modal-footer.grey.lighten-2
-			a.modal-action.modal-close.waves-effect.waves-red.btn-flat.tooltipped('data-position' = 'top', 'data-delay' = 50, 'data-tooltip' = 'Cerrar')
-				i.material-icons.red-text.darken-2 close
 block script
 	// jQuery
 	script(src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous")
+	// jQuery UI
+	script(src="/javascripts/jquery-ui/jquery-ui.min.js")
 	// Openlayers 3
 	script(src="/javascripts/ol3/ol-debug.js")
 	// MaterializeCSS (Google)
@@ -99,6 +99,7 @@ block script
 	// ol-utils
 	script(src="/javascripts/ol-utils/controls/mouse-position.js")
 	script(src="/javascripts/ol-utils/controls/side-menu.js")
+	script(src="/javascripts/ol-utils/controls/modal.js")
 	script(src="/javascripts/ol-utils/controls/measure.js")
 	script(src="/javascripts/ol-utils/controls/perfil.js")
 	script(src="/javascripts/ol-utils/controls/select-control.js")

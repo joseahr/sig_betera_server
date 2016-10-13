@@ -36,6 +36,10 @@ module.exports = (rep, pgp) => {
         getLayers : (id_map)=> 
             rep.manyOrNone(sql.getLayers, { id_map : pgp.as.value(id_map) })
             .then(layers => layers.length ? layers.map(l => l.id_layer) : undefined),
+
+        getBaseLayers : (id_map)=> 
+            rep.manyOrNone(sql.getBaseLayers, { id_map : pgp.as.value(id_map) })
+            .then(layers => layers.length ? layers.map(l => l.id_base_layer) : undefined),
         // Obtener las capas de un usuario que necesitan darse permisos
         // Por ejemplo : Un usuario se le asigna un mapa
         // En ciertas capas del mapa puede no tener permisos de lectura
@@ -46,7 +50,7 @@ module.exports = (rep, pgp) => {
                 : this.getDefaultMaps();
             return promise
             .then(listOfMaps =>{
-                console.log(listOfMaps, 'lisssssst');
+                //console.log(listOfMaps, 'lisssssst');
                 if(!listOfMaps) return Promise.resolve(null);
                 return rep.tx( t =>{
                     return t.batch(listOfMaps.map(this.getLayers))
@@ -54,10 +58,19 @@ module.exports = (rep, pgp) => {
                 .then(mapLayers =>{
                     return this.getMapNames(...listOfMaps)
                     .then(mapNames => {
-                        return listOfMaps.reduce( (arr, id_map, idx) =>{
-                            arr.push({ id : id_map, mapName : mapNames[idx].name, maplayerIds : mapLayers[idx] });
-                            return arr;
-                        }, []);
+                        return rep.tx( t =>{
+                            return t.batch(listOfMaps.map(this.getBaseLayers))
+                        })
+                        .then(mapBaseLayers =>{
+                            return listOfMaps.reduce( (arr, id_map, idx) =>{
+                                let obj = { id : id_map, mapName : mapNames[idx].name, maplayerIds : mapLayers[idx] };
+                                obj['mapbaselayerIds'] = mapBaseLayers[idx] 
+                                    ? mapBaseLayers[idx] 
+                                    : [];
+                                arr.push(obj);
+                                return arr;
+                            }, []);
+                        });
                     })                
                 })
 

@@ -22,10 +22,11 @@ ol.control.MousePositionBetera = function(opts){
         closeElementContainer.get(0).style.background = 'rgba(0,0,0,0)';
         closeElementContainer.get(0).style.padding = '0px';
 
-    var closeElement = $('<a>').appendTo(closeElementContainer);
+    var closeElement = $('<a style="float : right">');
         closeElement.get(0).href = '#';
         closeElement.get(0).className = 'material-icons red-text valign';
         closeElement.html('clear');
+    closeElementContainer.before(closeElement);
 
     var coordsContainer = $('<div>').appendTo(element);
         coordsContainer.get(0).style.clear = 'both';
@@ -98,7 +99,7 @@ ol.control.MousePositionBetera = function(opts){
             closeElement
                 .removeClass('red-text')
                 .addClass('indigo-text')
-                .css('font-size', '3em')
+                .css('font-size', '2.5em')
                 .html('list');
 
         } else {

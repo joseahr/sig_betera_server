@@ -35,6 +35,17 @@ module.exports = (rep, pgp) => {
             rep.many(sql.schema, {
                 tableName : pgp.as.value(tableName)
             }),
+
+        getAllLayers : () =>
+            rep.manyOrNone(sql.getAllLayers),
+
+        getAllBaseLayers : () =>
+            rep.manyOrNone(sql.getAllBaseLayers),
+
+        getBaseLayer : id_layer =>
+            rep.one(sql.getBaseLayer, {
+                id_layer : pgp.as.value(id_layer)
+            }),
         // Obtener una capa como GeoJSON
         getLayerAsGeoJSON : function(layerName){
             return this.getLayerSchema(layerName)
@@ -47,7 +58,7 @@ module.exports = (rep, pgp) => {
                 return rep.one(sql.getLayerAsGeoJSON, {
                     geomColumn : pgp.as.name(geomColumn),
                     properties : properties.map(prop => pgp.as.name(prop.name)).join(),
-                    layerName,
+                    layerName
                 })
                 // Devolvemos un objeto 
                 // {layerName : 'Nombre de la capa', layer : 'Capa en formato GeoJSON'}

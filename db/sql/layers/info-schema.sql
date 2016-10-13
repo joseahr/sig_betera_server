@@ -3,4 +3,5 @@ SELECT column_name as name,
 		-- udt_name (user defined types)
 		udt_name as udt
 FROM information_schema.columns
-WHERE table_name = ${tableName};
+WHERE table_name = ${tableName}
+AND table_schema = 'capas';

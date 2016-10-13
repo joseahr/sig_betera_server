@@ -12,7 +12,7 @@ points2d AS
 cells AS
 -- Get DEM elevation for each
 (SELECT p.geom AS geom, st_astext(p.geom), ST_Value(mdt.rast, 1, p.geom) AS val
-    FROM mdt, points2d p
+    FROM capas.mdt, points2d p
     WHERE ST_Intersects(mdt.rast, p.geom)),
 -- Instantiate 3D points
 points3d AS

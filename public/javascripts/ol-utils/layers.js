@@ -1,4 +1,21 @@
 //Mapa base del IGN
+function Tile(opts){
+    return new ol.layer.Tile({
+        name : opts.name,
+        visible : true,
+        source : new ol.source.TileWMS({
+            url : opts.service_url,
+            params: {
+                'FORMAT': 'image/tif', 
+                'VERSION': '1.1.1',
+                transparent : true,
+                tiled : true, 
+                LAYERS: opts.layers,
+                STYLES: ''
+            }
+        })
+    });
+}
 var ignBase = new ol.layer.Tile({
     name: 'IGN Base',
     visible: true,

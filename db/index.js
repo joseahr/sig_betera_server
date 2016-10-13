@@ -10,6 +10,7 @@ const raster        = require('./repos/raster');
 const layers         = require('./repos/layers');
 const roles        = require('./repos/roles');
 const maps        = require('./repos/maps');
+const admin        = require('./repos/admin');
 // repositorio "capas" TODO
 
 // Loading all the database repositories separately,
@@ -19,7 +20,8 @@ const repos = {
     raster,
     layers,
     roles,
-    maps
+    maps,
+    admin
 };
 
 // pg-promise initialization options:
@@ -39,6 +41,7 @@ const options = {
         obj.users.roles = repos.roles(obj, pgp);
         obj.users.maps = repos.maps(obj, pgp);
         obj.raster = repos.raster(obj, pgp);
+        obj.admin = repos.admin(obj, pgp);
     }
 
 };

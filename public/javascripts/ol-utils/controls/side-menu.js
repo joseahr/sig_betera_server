@@ -12,8 +12,8 @@ ol.control.SideMenu = function(opts){
         .css('left', '0.5em');
     var icon = $('<i>')
         .addClass('material-icons valign indigo-text darken-2')
-        .css('font-size', '3em')
-        .html('menu')
+        .css('font-size', '2.5em')
+        .html('arrow_back')
         .appendTo(element);
     
     ol.control.Control.call(this, {
@@ -28,7 +28,7 @@ ol.control.SideMenu = function(opts){
 
     element.bind('click', function(e){
         e.preventDefault();
-        console.log(self.opened);
+        //console.log(self.opened);
         var paddingLeft;
         var step = 0;
         if(self.opened) {
@@ -39,7 +39,18 @@ ol.control.SideMenu = function(opts){
                 },
                 duration : 400
             });
-            icon.addClass('indigo-text').removeClass('red-text');
+            icon.removeClass('red-text').addClass('indigo-text').html('arrow_forward');
+            
+            if(+$('#map').css('padding-bottom').replace('px', '') > 0){
+                $('.modal').css('left', '0px');
+                $('.modal').css('width', 'auto');
+                $('.modal').css('max-width', '');
+                $('.modal').css('right', '0px');
+            }
+            if(+$('.modal.open').css('left').replace('px', '') == 300){
+                $('.modal').css('left', '0px');
+                $('.modal').css('max-width', $('#map').width() );
+            }
         }
         else {
             $('#slide-out').stop(true, true).animate({ fake : 0}, 0).animate({ fake : 300 }, {
@@ -49,14 +60,31 @@ ol.control.SideMenu = function(opts){
                 },
                 duration : 400
             });
-            icon.addClass('red-text').removeClass('indigo-text');
+            icon.removeClass('indigo-text').addClass('red-text').html('arrow_back');
+            if(+$('#map').css('padding-bottom').replace('px', '') > 0){
+                $('.modal').css('left', '300px');
+                $('.modal').css('width', 'auto');
+                //alert($(window).width() - 300);
+                $('.modal').css('max-width', '');
+                $('.modal').css('right', '0px');
+            }
+            if(+$('.modal.open').css('left').replace('px', '') < 300){
+                //alert($(window).width() - 300);
+                $('.modal').css('left', '300px');
+                if($('.modal.open').width() > $(window).width() - 300 ){
+                    $('.modal').css('right', '0px');
+                    $('.modal').css('width', 'auto');
+                    $('.modal').css('max-width', $(window).width() - 300 );
+                }
+            }
+
         }
         self.opened = !self.opened;
     });
 
     $('#close-sidenav').bind('click', function(e){
         e.preventDefault();
-        console.log('close sidenav');
+        //console.log('close sidenav');
         element.click();
     });
 

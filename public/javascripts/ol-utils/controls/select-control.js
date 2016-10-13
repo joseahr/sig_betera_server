@@ -1,15 +1,41 @@
+function getTableRow(obj){
+    var tr = $('<tr>');
+    Object.keys(obj).map(function(k){
+        if(k == 'geometry' || k == 'layerName') return;
+        $('<td>').html(obj[k]).appendTo(tr); 
+    });
+    return tr;
+}
+
+function getTableHeader(obj){
+    var tr = $('<tr>');
+    Object.keys(obj).map(function(k){
+        if(k == 'geometry' || k == 'layerName') return;
+        $('<th>').html(k).appendTo(tr); 
+    });
+    return tr;  
+}
+
 function getTable(obj){
-    console.log('props', Object.keys(obj));
-    var str_ = '<table><thead>' + 
+    //console.log('props', Object.keys(obj));
+    var str_ = '<div class="col s12" style="overflow-x : scroll;"><table><thead>' + 
         Object.keys(obj).reduce(function(str, k){
             if(k != 'geometry' && k != 'layerName')
                 str += '<th>' + k + '</th>'
             return str;
         }, '') + 
-    '</thead><tbody></tbody></table>';
-    console.log(str_, $(str_));
+    '</thead><tbody></tbody></table></div>';
+    //console.log(str_, $(str_));
     return $(str_);
 }
+
+var modalSelect = new ModalBetera('#modal-feature', {
+    complete : function(){
+        mapController.updateSize('bottom', '0px');
+    }
+});
+
+var modalSelectDisp = modalSelect.getDisparador()
 
 function SelectControl(mapController){
 
@@ -21,13 +47,13 @@ function SelectControl(mapController){
     // Control en la barra principal
     var controlSelect = new ol.control.Toggle({
         name : 'select',
-        html: '<i class="material-icons">pan_tool</i>',
+        html: '<i class="material-icons">info_outline</i>',
         onToggle : function(){
             mapController.sourceSelectedFeatures.clear();
             map.getTargetElement().style.cursor = 'auto';
             map.unByKey(listener);
 
-            $('#modal-feature').closeModal();
+            modalSelect.closeModal();
             mapController.updateSize('bottom', '0px');
 
             if(!this.getActive()) return;
@@ -219,11 +245,7 @@ function showTable(self){
         )
     });
 
-    $('<a href="#modal-feature">').leanModal({
-        complete : function(){
-            self.updateSize('bottom', '0px');
-        }
-    }).trigger('click');
+    modalSelectDisp.trigger('click');
     $('.lean-overlay').remove();
-    self.updateSize('bottom', $('#modal-feature').innerHeight());
+    //self.updateSize('bottom', $('#modal-feature').innerHeight());
 }

@@ -1,21 +1,3 @@
-function getTableRow(obj){
-    var tr = $('<tr>');
-    Object.keys(obj).map(function(k){
-        if(k == 'geometry' || k == 'layerName') return;
-        $('<td>').html(obj[k]).appendTo(tr); 
-    });
-    return tr;
-}
-
-function getTableHeader(obj){
-    var tr = $('<tr>');
-    Object.keys(obj).map(function(k){
-        if(k == 'geometry' || k == 'layerName') return;
-        $('<th>').html(k).appendTo(tr); 
-    });
-    return tr;  
-}
-
 function MapController(){
 
     var self = this;
@@ -85,8 +67,8 @@ function MapController(){
     this.updateSize = function updateSize(paddingPosition, paddingValue){
         if(paddingPosition == 'left' && $(window).innerWidth() < 993) return;
         $('#map').css('padding-' + paddingPosition, paddingValue);
-        if(paddingPosition == 'left')
-            $('.modal').css('padding-left', paddingValue);
+        //if(paddingPosition == 'left')
+        //    $('.modal').css('padding-left', paddingValue);
         $('#map').trigger('sizeupdated');
         //$('.coords-scale-container').css('margin-' + paddingPosition, paddingValue);
         this.map.updateSize();
@@ -150,7 +132,10 @@ MapController.prototype.request = function(method, url){
         var xhr = new XMLHttpRequest();
         xhr.open(method, url, true);
         xhr.onreadystatechange = function(){
-            if(xhr.readyState === 4 && xhr.status < 400) resolve(JSON.parse(xhr.responseText));
+            if(xhr.readyState === 4 && xhr.status < 400){
+                //console.log(xhr.responseText, 'responseText');
+                resolve(JSON.parse(xhr.responseText));
+            }
             else if(xhr.readyState === 4) reject(xhr.responseText)
         };
         xhr.send(null);
@@ -266,12 +251,12 @@ MapController.prototype.loadMaps = function(){
     this.request('GET', '/usuarios/mapas')
     .then(function(listOfMaps){
         // Recorremos la lista de mapas con reduce
-        console.log(listOfMaps, 'lisst');
+        //console.log(listOfMaps, 'lisst');
         return Bluebird.all(
             listOfMaps.map(function(mapa){
                 // Creamos un grupo de capas
                 // que contendrá todas las capas del mapa
-                console.log('mapa'. mapa);
+                //console.log('mapa'. mapa);
                 var groupCapasMap = new ol.layer.Group({
                     name: mapa.mapName,
                     format : new ol.format.GeoJSON(),
@@ -300,6 +285,31 @@ MapController.prototype.loadMaps = function(){
                             //alert(error);
                         });
                     }) // mapa.maplayerIds.map(...)
+                    .concat(
+                        mapa.mapbaselayerIds.map(function(mblId){
+                            return self.request('GET', '/usuarios/capas/base/' + mblId)
+                            .then(function(capa){
+                                // Obtenemos la capa en formato GeoJSON
+                                // Llamamos a la función addCapa()
+                                //self.addLayer(capa, groupCapasMap);
+                                //console.log(capa, 'baseLayer');
+                                groupCapasMap.getLayers().extend([
+                                    Tile({
+                                        name : capa.name,
+                                        service_url : capa.service_url,
+                                        layers : capa.name
+                                    })
+                                ]);
+                            })
+                            .catch(function(error){
+                                // Aquí debería ir un mensaje de error :/
+                                // Se dispara si hay un error obteniendo una capa particular
+                                console.log('La capa con id ' +  mblId + ' del mapa ' + mapa.mapName + ' no se ha podido cargar.');
+                                console.log(error);
+                                //alert(error);
+                            });
+                        })
+                    )
                 ) // Bluebird.all
                 .then(function(){
                     // Mostramos mensaje mapa cargado
@@ -358,6 +368,8 @@ MapController.prototype.loadMaps = function(){
 var mapController = new MapController();
 mapController.loadMaps();
 
+/*
 $('body').resize(function(){
     console.log('fullscreen');
 })
+*/

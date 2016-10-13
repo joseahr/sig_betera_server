@@ -32,4 +32,14 @@ router
 
 });
 
+router
+.route('/base/:id_layer')
+.get( (req, res)=>{
+    console.log(req.params.id_layer);
+    //if(!req.user) return res.status(500).json('No capas asignadas');
+    db.users.layers.getBaseLayer(req.params.id_layer)
+    .then(baseLayer => res.status(200).json(baseLayer) )
+    .catch(err => res.status(404).json(err) );
+});
+
 module.exports = router;
