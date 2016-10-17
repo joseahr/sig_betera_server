@@ -27,7 +27,6 @@ const admin = require('./routes/admin');
 const app = express();
 
 //app.enable('trust proxy');
-const http = require('http');
 
 // Motor de vistas
 app.set('views', path.join(__dirname, 'views'));

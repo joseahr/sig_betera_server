@@ -1,0 +1,1 @@
+SELECT array_agg(g.name) AS groups FROM groups g

@@ -44,7 +44,10 @@ router
     let id = req.user ? req.user.id : null;
     db.users.maps.getMapsAndLayers(id)
     .then( mapsAndLayers => res.status(200).json(mapsAndLayers) )
-    .catch( err => res.status(500).json(err) );
+    .catch( err => {
+        console.log(err);
+        res.status(500).json(err);
+    });
 });
 
 module.exports = router;

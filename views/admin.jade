@@ -1,5 +1,7 @@
 extends layout
 block link
+    // jQuery UI
+    link(rel="stylesheet" href="/javascripts/jquery-ui/jquery-ui.min.css")
     // AnimateCSS
     link(rel="stylesheet" href="/stylesheets/animate.min.css")
     // MaterializeCSS
@@ -28,16 +30,53 @@ block content
             thead
                 tr
                     th.no-sort
-                    each k in ['id', 'name', 'email', 'rol', 'group']
+                    each k in ['id', 'name', 'email', 'rol', 'grupos']
                         th #{k}
             tbody
                 each user in allUsers
                     tr
                         td.no-sort(user-id="#{user.id}")
                             i.user-detail-btn.material-icons.green-text(style="cursor : pointer;") mode_edit
-                        each k in ['id', 'name', 'email', 'rol', 'group']
-                            td #{user[k]} 
-    #mapas(style="left : 300px; top : 64px; right : 0px; bottom : 0px; position : absolute; background : rgba(0,100,0,0.5);  visibility : hidden;") Mapas
+                        each k in ['id', 'name', 'email', 'rol']
+                            td #{user[k]}
+                        td #{ (user['grupos'] || []).join(', ')}
+    #mapas(style="left : 300px; top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;")
+        .card-panel.indigo.white-text Todos los mapas
+            i.create-map-btn.material-icons.white-text(style="float : right; cursor : pointer;") add_circle_outline
+        table#mapas-table.display.highlight(cellspacing="0" width="100%")
+            thead
+                tr
+                    each k in ['id', 'name', 'layers', 'baselayers']
+                        th #{k}
+                    th.no-sort
+                        i.material-icons(style="cursor : default; ") mode_edit
+                    th.no-sort
+                        i.material-icons(style="cursor : default; ") remove_circle_outline
+            tbody
+                each mapa in allMaps.sort(function(a, b){ return a.id > b.id})
+                    tr
+                        each k in ['id', 'name', 'layers', 'baselayers']
+                            td #{mapa[k]}
+                        td
+                            i.green-text.edit-map-btn.material-icons(map-id="#{mapa.id}" style="cursor : pointer;") mode_edit
+                        td
+                            i.red-text.delete-map-btn.material-icons(map-id="#{mapa.id}" style="cursor : pointer;") remove_circle_outline
+        .card-panel.indigo.white-text Mapas default
+            i.create-map-default-btn.material-icons.white-text(style="float : right; cursor : pointer;") add_circle_outline
+        table#mapas-default-table.display.highlight(cellspacing="0" width="100%")
+            thead
+                tr
+                    each k in ['id', 'name', 'layers', 'baselayers']
+                        th #{k}
+                    th.no-sort
+                        i.material-icons(style="cursor : default; ") remove_circle_outline
+            tbody
+                each mapa in (allDefaultMaps || []).sort(function(a, b){ return a.id > b.id})
+                    tr
+                        each k in Object.keys((allDefaultMaps[0] || []))
+                            td #{mapa[k]}
+                        td
+                            i.red-text.delete-map-default-btn.material-icons(map-id="#{mapa.id}" style="cursor : pointer;") remove_circle_outline
     #capas(style="left : 300px; top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;")
         .card-panel.indigo.white-text Capas PostGIS
         table#capas_table.display.highlight(cellspacing="0" width="100%")
@@ -61,6 +100,23 @@ block content
                     tr
                         each k in Object.keys(allBaseLayers[0])
                             td #{capa[k]}
+    #mail(style="left : 300px; top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;")
+        .card-panel.col.s12.indigo.white-text Usuarios
+        .col.s12
+            ul.collapsible(data-collapsible='accordion')
+                each grupo in allGroups
+                    li
+                        .collapsible-header.indigo-text
+                            form(action="#")
+                                input.input-group(type='checkbox' id="#{grupo}")
+                                label.indigo-text(for="#{grupo}") #{grupo}
+                        .collapsible-body
+                            ul.collection
+                                each user in allUsers.reduce(function(a, b){ if(b.grupos.indexOf(grupo) > -1) a.push(b); return a;}, [])
+                                    li.collection-item
+                                        form(style="margin-left : 3em;" action="#")
+                                            input.input-user(type='checkbox' id="#{grupo}-#{user.name}")
+                                            label(for="#{grupo}-#{user.name}") Nombre : #{user.name}   Email : #{user.email}
     // Menú lateral
     ul#slide-out.side-nav.fixed(style="margin-top : 64px;")
         a#close-sidenav(href="#" style="position : absolute ; right : 0em; top : 0em; font-size : 2em; z-index : 1;" class="material-icons red-text hide-on-large-only") clear
@@ -103,182 +159,60 @@ block content
                 i.material-icons.orange-text(style="float : right") layers
         li
             .divider
+        li.bold
+            a.waves-effect(href='#mail' data-href='#mail')
+                | Mail
+                i.material-icons.red-text(style="float : right") mail_outline
+        li
+            .divider
         li
             a.subheader Footer Prueba
     // Modal Structure
     #user-detail.modal.modal-fixed-footer
-        .modal-header.card-panel.indigo.white-text(style="pointer : default !important; margin-top : 0px;") Mapas
+        .modal-header.card-panel.indigo.white-text(style="pointer : default !important; margin-top : 0px;") Editar Usuario
         .modal-content
+        .modal-footer
+            a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cerrar
+    #new-map.modal.modal-fixed-footer
+        .modal-header.card-panel.indigo.white-text(style="pointer : default !important; margin-top : 0px;") Nuevo Mapa
+        .modal-content.row
+            form#new-map-form(method="POST" action="/")
+                .col.s10
+                    input.col.s12(type="text" placeholder="Añade nombre para nuevo mapa" name="name")
+                .col.s2
+                    button.btn.waves-effect.waves-light(name="action" type="submit") Crear
+                        i.material-icons.right send
+        .modal-footer
+            a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cerrar
+    #new-map-default.modal.modal-fixed-footer
+        .modal-header.card-panel.indigo.white-text(style="pointer : default !important; margin-top : 0px;") Añadir Mapa Default
+        .modal-content.row
+            .col.s12
+                select.col.s12(placeholder="Elige un mapa para hacerlo default" name="name")
+                    option(disabled selected value="") Elige un mapa para hacerlo default
+                    each map in allMaps.reduce(function(list, m){ if( (allDefaultMaps || []).map(function(a){return a.id;}).indexOf(m.id) == -1)list.push(m);return list;}, [])
+                        option(value="#{map.id}") #{map.name}
+        .modal-footer
+            a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cerrar
+    #edit-map.modal.modal-fixed-footer
+        .modal-header.card-panel.indigo.white-text(style="pointer : default !important; margin-top : 0px;") Editar mapa
+        .modal-content(style="height: calc(100% - 120px)")
         .modal-footer
             a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cerrar
 
 block script
     // jQuery
     script(src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous")
+    // jQuery UI
+    script(src="/javascripts/jquery-ui/jquery-ui.min.js")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js")
     script(src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js")
     script.
         var allUsers = JSON.parse('!{JSON.stringify(allUsers)}');
-        
-        setDataTable('table');
-
-        $('#slide-out li a').click(function(e){
-            e.preventDefault();
-            $('#slide-out li.active').removeClass('active');
-            $(this).parent().addClass('active');
-
-            $('.visible_bet').removeClass('visible_bet').css('visibility', 'hidden');
-            $( $(this).attr('data-href') ).addClass('visible_bet').css('visibility', 'visible').animateCss('bounceInDown');
-        });
-
-        $.fn.extend({
-            animateCss: function (animationName) {
-                var animationEnd = 'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend';
-                var self = this;
-                this.addClass('animated ' + animationName).one(animationEnd, function() {
-                    $(this).removeClass('animated ' + animationName);
-                });
-            }
-        });
-
-        function setDataTable(selector){
-            $(selector).DataTable({
-                order : [],
-                "columnDefs": [ {
-                    "targets": 'no-sort',
-                    "orderable": false
-                } ],
-                "language": {
-                    "sProcessing":     "Procesando...",
-                    "sLengthMenu":     "Mostrar _MENU_ registros",
-                    "sZeroRecords":    "No se encontraron resultados",
-                    "sEmptyTable":     "Ningún dato disponible en esta tabla",
-                    "sInfo":           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-                    "sInfoEmpty":      "Mostrando registros del 0 al 0 de un total de 0 registros",
-                    "sInfoFiltered":   "(filtrado de un total de _MAX_ registros)",
-                    "sInfoPostFix":    "",
-                    "sSearch":         "Buscar:",
-                    "sUrl":            "",
-                    "sInfoThousands":  ",",
-                    "sLoadingRecords": "Cargando...",
-                    "oPaginate": {
-                        "sFirst":    "Primero",
-                        "sLast":     "Último",
-                        "sNext":     "Siguiente",
-                        "sPrevious": "Anterior"
-                    },
-                    "oAria": {
-                    "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-                    "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-                    }
-                }
-            });
-            $('select').material_select();
-        }
-
-        console.log(allUsers);
-        $('.user-detail-btn').click(function(e){
-            var userId = +$(this).parent().attr('user-id');
-            var list = $('<ul class="collapsible popout" data-collapsible="accordion"></ul>');
-            var mna = $('<table class="display highlight user-layer-table" cellspacing="0" width="100%"><thead><tr><th>id</th><th>nombre</th><th class="no-sort"></th></tr></thead><tbody></tbody></table>');
-            $('#user-detail .modal-content').empty();
-            allUsers.forEach(function(user){
-                if(user.id === userId){
-                    (user.not_assigned_maps || []).forEach(function(mapa){
-                        mna.find('tbody').append(
-                            '<tr><td>' + mapa.id + '</td><td>' + mapa.name + '</td><td><i style="cursor : pointer" class="material-icons green-text add-map-btn" user-id="' + user.id +'" map-id="' + mapa.id + '">add_circle</i></td></tr>'
-                        )
-                    });
-                    (user.maps || []).forEach(function(mapa){
-                        var capas = $('<table class="display highlight user-layer-table" cellspacing="0" width="100%"><thead><tr><th>Nombre de la capa</th><th>Rol del usuario</th></tr></thead><tbody></tbody></table>');
-                        (mapa.layers || []).forEach(function(capa){
-                            capas.find('tbody').append(
-                                '<tr><td>' + capa.name + '</td><td>' + (capa.rol || 'r') + '</td></tr>'
-                            )
-                        });
-                        //console.log(mapa);
-                        list.append(
-                            '<li>' + 
-                                '<div class="collapsible-header">' + 
-                                    '<i class="material-icons">map</i>' +
-                                    '<i style="float: right; pointer : cursor;" class="remove-map-btn red-text material-icons" user-id="' + user.id +'" map-id="' + mapa.id_map + '">' + 
-                                        'remove_circle_outline' +
-                                    '</i>' 
-                                    + mapa.name + 
-                                '</div>' +
-                                '<div class="collapsible-body" style="margin : 15px;"><p>' + capas.prop('outerHTML') + '</p></div>' +
-                            '</li>'
-                        );
-                    });
-                }
-            });
-            $('#user-detail .modal-content')
-                .append(
-                    '<div class="row">'+
-                        '<div class="col s12">'+
-                            '<ul class="tabs">'+
-                                '<li class="tab col s3"><a class="active" href="#mapas-usuario">Mapas</a></li>'+
-                                '<li class="tab col s3"><a href="#assign-mapas">Asignar Mapas</a></li>'+
-                            '</ul>'+
-                        '</div>'+
-                        '<div id="mapas-usuario" class="col s12">' + 
-                            list.prop('outerHTML') +
-                        '</div>'+
-                        '<div id="assign-mapas" class="col s12">' +
-                            mna.prop('outerHTML') +
-                        '</div>'+
-                    '</div>'
-                );
-                
-            $('ul.tabs').tabs();
-            setDataTable('.user-layer-table');
-            $('select').material_select();
-            $('.collapsible').collapsible();
-            $('#user-detail').openModal();
-        });
-
-        $('body').on('click', '.add-map-btn', function(e){
-            var td = $(this).closest('tr');
-            var id_user = $(this).attr('user-id');
-            var id_map = $(this).attr('map-id');
-            console.log(id_map, id_user);
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/admin/user/addmap', true);
-            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            xhr.onreadystatechange = function(){
-                if(xhr.readyState == 4){
-                    console.log(xhr.responseText);
-                    if(xhr.status >= 200 && xhr.status < 300){
-                        Materialize.toast('Mapa asignado correctamente', 2000);
-                        td.remove();
-                    }
-                }
-            }
-            xhr.send($.param([
-                {name : 'id_map', value : id_map},
-                {name : 'id_user', value : id_user}
-            ]));
-        });
-
-        $('body').on('click', '.remove-map-btn', function(e){
-            var div = $(this).parent().parent();
-            var id_user = $(this).attr('user-id');
-            var id_map = $(this).attr('map-id');
-            console.log(id_map, id_user);
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/admin/user/removemap', true);
-            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            xhr.onreadystatechange = function(){
-                if(xhr.readyState == 4){
-                    console.log(xhr.responseText);
-                    if(xhr.status >= 200 && xhr.status < 300){
-                        Materialize.toast('Mapa eliminado al usuario correctamente', 2000);
-                        div.remove();
-                    }
-                }
-            }
-            xhr.send($.param([
-                {name : 'id_map', value : id_map},
-                {name : 'id_user', value : id_user}
-            ]));
-        });
+        var allMaps = JSON.parse('!{JSON.stringify(allMaps)}');
+        var allDefaultMaps = JSON.parse('!{JSON.stringify(allDefaultMaps)}');
+        var allLayers = JSON.parse('!{JSON.stringify(allLayers)}');
+        var allBaseLayers = JSON.parse('!{JSON.stringify(allBaseLayers)}');
+        var allGroups = JSON.parse('!{JSON.stringify(allGroups)}');
+        $('.collapsible').collapsible();
+    script(src="/javascripts/admin.js")

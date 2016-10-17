@@ -4,8 +4,25 @@ function GeolocationControl(mapController){
     var map = mapController.map;
     var geolocation = mapController.geolocation;
     geolocation.on('error', function(err){
-        alert(err);
-        console.log(err);
+        try{
+            alert(err);
+            logDeep(err);
+
+            function logDeep(obj){
+                Object.keys(obj).forEach(function(k){
+                    if(typeof obj[k] == 'object') return logDeep(obj[k]);
+                    alert('ld ' + k + ' ' + obj[k]);
+                });
+            }
+            console.log(err);
+        } catch(e){
+            alert('eeeeerror geoloc');
+        }
+        geolocation.setTracking(true);
+    });
+    geolocation.on('change', function(evt) {
+        alert('changed' + geolocation.getPosition())
+        addPosition(geolocation.getPosition());
     });
     var positionSource = new ol.source.Vector();
     var positionVector = new ol.layer.Vector({
@@ -49,12 +66,9 @@ function GeolocationControl(mapController){
             geolocation.setTracking(true);
             // listen to changes in position
             geolocation.on('change', function(evt) {
-                console.log('changed' + geolocation.getPosition())
+                alert('changed' + geolocation.getPosition())
                 addPosition(geolocation.getPosition());
             });
-            geolocation.on('error', function(error){
-                console.log('Error posicion; ', error);
-            })
         }
     });
 

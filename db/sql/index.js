@@ -54,7 +54,8 @@ module.exports = {
         add: sql('users/add.sql'),
         createCitextExtension: sql('users/extension_citext.sql'),
         createRolesEnum : sql('users/user-roles-enum.sql'),
-        findBy: sql('users/find_by.sql')
+        findBy: sql('users/find_by.sql'),
+        getAllGroups : sql('users/get-all-groups.sql')
     },
     raster : {
         perfil : sql('raster/perfil.sql')
@@ -89,7 +90,8 @@ module.exports = {
         getDefaultMaps : sql('maps/get-default-maps.sql'),
         getMapNames : sql('maps/map-names.sql'),
         getLayers : sql('maps/get-layers.sql'),
-        getBaseLayers : sql('maps/get-base-layers.sql')
+        getBaseLayers : sql('maps/get-base-layers.sql'),
+        getAllMaps : sql('maps/get-all-maps.sql')
     },
     admin : {
         getUsers : sql('admin/users-admin.sql')

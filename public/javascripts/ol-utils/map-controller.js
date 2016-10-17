@@ -267,7 +267,7 @@ MapController.prototype.loadMaps = function(){
                 // Utilizamos Promise.all para obtener todas las capas del mapa
                 return Bluebird.all(
                     // Recorremos la lista de ids de las capas con map
-                    mapa.maplayerIds.map(function(mlId){
+                    (mapa.maplayerIds || []).map(function(mlId){
                         // mlId es la id de una de las capas del mapa
                         // Enviamos una petición para obtener la capa en 
                         // formato GeoJSON
@@ -286,7 +286,7 @@ MapController.prototype.loadMaps = function(){
                         });
                     }) // mapa.maplayerIds.map(...)
                     .concat(
-                        mapa.mapbaselayerIds.map(function(mblId){
+                        (mapa.mapbaselayerIds || []).map(function(mblId){
                             return self.request('GET', '/usuarios/capas/base/' + mblId)
                             .then(function(capa){
                                 // Obtenemos la capa en formato GeoJSON

@@ -6,7 +6,7 @@ function Tile(opts){
         source : new ol.source.TileWMS({
             url : opts.service_url,
             params: {
-                'FORMAT': 'image/tif', 
+                'FORMAT': 'image/png', 
                 'VERSION': '1.1.1',
                 transparent : true,
                 tiled : true, 

@@ -47,7 +47,7 @@ ol.control.SideMenu = function(opts){
                 $('.modal').css('max-width', '');
                 $('.modal').css('right', '0px');
             }
-            if(+$('.modal.open').css('left').replace('px', '') == 300){
+            if( +($('.modal.open').css('left') || '0px').replace('px', '') == 300){
                 $('.modal').css('left', '0px');
                 $('.modal').css('max-width', $('#map').width() );
             }
@@ -68,7 +68,7 @@ ol.control.SideMenu = function(opts){
                 $('.modal').css('max-width', '');
                 $('.modal').css('right', '0px');
             }
-            if(+$('.modal.open').css('left').replace('px', '') < 300){
+            if(+($('.modal.open').css('left') || '300px').replace('px', '') < 300){
                 //alert($(window).width() - 300);
                 $('.modal').css('left', '300px');
                 if($('.modal.open').width() > $(window).width() - 300 ){

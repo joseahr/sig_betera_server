@@ -1,9 +1,21 @@
-SELECT u.id, u.name, u.email, u.rol, g.group, maps__.*, mm.*
+SELECT u.id, u.name, u.email, u.rol, groups.*, maps__.*, mm.*, roles_.*
 -- Seleccionamos id, nombre, email, rol de la tabla usuarios
 FROM Users u 
 -- Lo unimos con la tabla user_groups y obtenemos el grupo 
 -- al que pertenece el usuario
-LEFT JOIN user_groups g ON u.id = g.id_user
+LEFT JOIN LATERAL (
+	SELECT array_agg(gg.group) AS grupos 
+	FROM user_groups gg
+	WHERE gg.id_user = u.id
+) groups ON TRUE
+LEFT JOIN LATERAL (
+	SELECT json_agg(rr)::json AS layers_rol
+	FROM (
+		SELECT roles.*, layers.name
+		FROM roles, layers
+		WHERE roles.id_user = u.id AND roles.id_layer = layers.id
+	) rr
+) roles_ ON TRUE
 LEFT JOIN LATERAL (
 	SELECT json_agg(nam) AS not_assigned_maps FROM (
 		SELECT * 

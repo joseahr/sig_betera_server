@@ -14,6 +14,10 @@ module.exports = (rep, pgp) => {
      */
 
     return {
+        getAllGroups : ()=>
+            rep.one(sql.getAllGroups)
+                .then(allGroups => allGroups.groups),
+
         validPassword: (user, password) =>
             compare(password, user.password),
 
