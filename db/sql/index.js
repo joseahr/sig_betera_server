@@ -55,7 +55,9 @@ module.exports = {
         createCitextExtension: sql('users/extension_citext.sql'),
         createRolesEnum : sql('users/user-roles-enum.sql'),
         findBy: sql('users/find_by.sql'),
-        getAllGroups : sql('users/get-all-groups.sql')
+        getAllGroups : sql('users/get-all-groups.sql'),
+        isValid : sql('users/is-valid.sql'),
+        findIdByToken : sql('users/find-by-validate-token.sql')
     },
     raster : {
         perfil : sql('raster/perfil.sql')

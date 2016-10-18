@@ -2,6 +2,7 @@ const db = require('../db').db;
 
 const LocalStrategy = require('passport-local').Strategy;
 const localLogin = require('./local-login');
+const localSignup = require('./local-signup');
 
 module.exports = passport =>{
 
@@ -17,7 +18,8 @@ module.exports = passport =>{
         .catch(err => done(err))
     });
 
-    // Registro en la base de datos local
+    // Login local
     passport.use('local-login', new LocalStrategy(localLogin.options, localLogin.callback) );
-
+    // Registro local
+    passport.use('local-signup', new LocalStrategy(localSignup.options, localSignup.callback) );
 }

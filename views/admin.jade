@@ -24,8 +24,8 @@ block header
                             a(href="/visor") Visor
 block content
     // Div visible Inicio
-    #inicio.visible_bet(style="left : 300px; top : 64px; right : 0px; bottom : 0px; position : absolute; background : rgba(0,0,0,0.5)") Inicio
-    #usuarios(style="left : 300px; top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;") Usuarios
+    #inicio.seccion.visible_bet(style=" top : 64px; right : 0px; bottom : 0px; position : absolute; background : rgba(0,0,0,0.5)") Inicio
+    #usuarios.seccion(style=" top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;") Usuarios
         table#usuarios_table.display.highlight(cellspacing="0" width="100%")
             thead
                 tr
@@ -40,7 +40,7 @@ block content
                         each k in ['id', 'name', 'email', 'rol']
                             td #{user[k]}
                         td #{ (user['grupos'] || []).join(', ')}
-    #mapas(style="left : 300px; top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;")
+    #mapas.seccion(style=" top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;")
         .card-panel.indigo.white-text Todos los mapas
             i.create-map-btn.material-icons.white-text(style="float : right; cursor : pointer;") add_circle_outline
         table#mapas-table.display.highlight(cellspacing="0" width="100%")
@@ -73,11 +73,11 @@ block content
             tbody
                 each mapa in (allDefaultMaps || []).sort(function(a, b){ return a.id > b.id})
                     tr
-                        each k in Object.keys((allDefaultMaps[0] || []))
+                        each k in ['id', 'name', 'layers', 'baselayers']
                             td #{mapa[k]}
                         td
                             i.red-text.delete-map-default-btn.material-icons(map-id="#{mapa.id}" style="cursor : pointer;") remove_circle_outline
-    #capas(style="left : 300px; top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;")
+    #capas.seccion(style=" top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;")
         .card-panel.indigo.white-text Capas PostGIS
         table#capas_table.display.highlight(cellspacing="0" width="100%")
             thead
@@ -100,7 +100,21 @@ block content
                     tr
                         each k in Object.keys(allBaseLayers[0])
                             td #{capa[k]}
-    #mail(style="left : 300px; top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;")
+    #mail.seccion(style=" top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;")
+        .card-panel.col.s12.indigo.white-text Mensaje
+        .col.s12
+            .fixed-action-btn(style='bottom: 45px; right: 24px;')
+                a#send-mail.btn-floating.btn-large.indigo
+                    i.large.material-icons send
+            form.col.s12
+                .row
+                    .input-field.col.s6
+                        input#titulo-mail(type='text', length='20')
+                        label(for='titulo-mail') Título
+                .row
+                    .input-field.col.s12
+                        textarea#cuerpo-mail.materialize-textarea(length='500')
+                        label(for='cuerpo-mail') Cuerpo del mensaje
         .card-panel.col.s12.indigo.white-text Usuarios
         .col.s12
             ul.collapsible(data-collapsible='accordion')
@@ -108,14 +122,17 @@ block content
                     li
                         .collapsible-header.indigo-text
                             form(action="#")
-                                input.input-group(type='checkbox' id="#{grupo}")
-                                label.indigo-text(for="#{grupo}") #{grupo}
+                                if allUsers.reduce(function(a, b){ if(b.grupos.indexOf(grupo) > -1) a.push(b); return a;}, []).length
+                                    input.input-group(type='checkbox' id="grupo-#{grupo}" disabled=false)
+                                else
+                                    input.input-group(type='checkbox' id="grupo-#{grupo}" disabled=true)
+                                label.indigo-text(for="grupo-#{grupo}") #{grupo}
                         .collapsible-body
                             ul.collection
                                 each user in allUsers.reduce(function(a, b){ if(b.grupos.indexOf(grupo) > -1) a.push(b); return a;}, [])
                                     li.collection-item
                                         form(style="margin-left : 3em;" action="#")
-                                            input.input-user(type='checkbox' id="#{grupo}-#{user.name}")
+                                            input.input-user(id="#{grupo}-#{user.name}" email="#{user.email}" type='checkbox' group="grupo-#{grupo}")
                                             label(for="#{grupo}-#{user.name}") Nombre : #{user.name}   Email : #{user.email}
     // Menú lateral
     ul#slide-out.side-nav.fixed(style="margin-top : 64px;")
@@ -199,7 +216,6 @@ block content
         .modal-content(style="height: calc(100% - 120px)")
         .modal-footer
             a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cerrar
-
 block script
     // jQuery
     script(src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous")

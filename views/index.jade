@@ -17,6 +17,8 @@ block header
 						ul#nav-mobile.right.hide-on-med-and-down
 							li
 								a(href="/visor") Visor
+							li
+								a(href="#" class="new-user-btn") Registrarse
 block content
 	.parallax-container
 		.parallax
@@ -106,3 +108,8 @@ block script
 				{ name : 'password', value : $('#login').find('[name = "password"]').val() }
 			]));
 		}
+
+		$('.new-user-btn').click(function(e){
+			e.preventDefault();
+
+		});

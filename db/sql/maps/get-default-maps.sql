@@ -1,4 +1,4 @@
-SELECT Maps.*, lay.*, blay.*
+SELECT Maps.*, lay.*, blay.*, o.*
 FROM Maps
 LEFT JOIN LATERAL (
     SELECT array_agg(ll.id_layer)::integer[] as layers
@@ -12,4 +12,12 @@ LEFT JOIN LATERAL (
         SELECT id_base_layer FROM Map_Base_Layers ul WHERE ul.id_map = Maps.id
     ) bbll
 ) blay ON TRUE
+LEFT JOIN LATERAL (
+    SELECT json_agg(oo)::json AS orden
+    FROM (
+        SELECT *
+        FROM map_layers_order
+        WHERE id_map = Maps.id
+    ) oo
+) o ON TRUE
 WHERE id IN (SELECT id FROM Default_Maps)

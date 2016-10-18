@@ -14,6 +14,13 @@ module.exports = (rep, pgp) => {
      */
 
     return {
+        
+        findIdByToken : token =>
+            rep.oneOrNone(sql.findIdByToken, { token : pgp.as.value(token) } ),
+        
+        idValid : id => 
+            rep.one(sql.isValid, { id_user : pgp.as.value(id) } ),
+
         getAllGroups : ()=>
             rep.one(sql.getAllGroups)
                 .then(allGroups => allGroups.groups),
@@ -40,22 +47,6 @@ module.exports = (rep, pgp) => {
 
         init: () =>
             rep.tx('Demo-Users', t => t.map(sql.init, null, row => row.id)),
-
-        // Drops the table;
-        drop: () =>
-            rep.none(sql.drop),
-
-        // Removes all records from the table;
-        empty: () =>
-            rep.none(sql.empty),
-
-        // Adds a new user, and returns the new id;
-        add: name =>
-            rep.one(sql.add, name, user => user.id),
-
-        // Tries to delete a user by id, and returns the number of records deleted;
-        remove: id =>
-            rep.result('DELETE FROM Users WHERE id = $1', id, r => r.rowCount),
 
         // Tries to find a user from id;
         find: id =>

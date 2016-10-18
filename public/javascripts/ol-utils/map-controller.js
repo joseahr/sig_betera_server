@@ -257,6 +257,9 @@ MapController.prototype.loadMaps = function(){
                 // Creamos un grupo de capas
                 // que contendrá todas las capas del mapa
                 //console.log('mapa'. mapa);
+                var capas = [];
+                console.log(mapa);
+                var orden = mapa.orden;
                 var groupCapasMap = new ol.layer.Group({
                     name: mapa.mapName,
                     format : new ol.format.GeoJSON(),
@@ -275,7 +278,11 @@ MapController.prototype.loadMaps = function(){
                         .then(function(capa){
                             // Obtenemos la capa en formato GeoJSON
                             // Llamamos a la función addCapa()
-                            self.addLayer(capa, groupCapasMap);
+                            //self.addLayer(capa, groupCapasMap);
+                            var obj = {
+                                id : mlId, type : 'layer', layer : capa
+                            };
+                            capas.push(obj);
                         })
                         .catch(function(error){
                             // Aquí debería ir un mensaje de error :/
@@ -293,13 +300,10 @@ MapController.prototype.loadMaps = function(){
                                 // Llamamos a la función addCapa()
                                 //self.addLayer(capa, groupCapasMap);
                                 //console.log(capa, 'baseLayer');
-                                groupCapasMap.getLayers().extend([
-                                    Tile({
-                                        name : capa.name,
-                                        service_url : capa.service_url,
-                                        layers : capa.name
-                                    })
-                                ]);
+                                var obj = {
+                                    id : mblId, type : 'base', layer : capa
+                                };
+                                capas.push(obj);
                             })
                             .catch(function(error){
                                 // Aquí debería ir un mensaje de error :/
@@ -313,6 +317,25 @@ MapController.prototype.loadMaps = function(){
                 ) // Bluebird.all
                 .then(function(){
                     // Mostramos mensaje mapa cargado
+                    capas.sort(function(a, b){
+                        return findPositionInOrder(a.id, a.type, orden) > findPositionInOrder(b.id, b.type, orden);
+                    })
+                    .reverse()
+                    .forEach(function(capa){
+                        var type = capa.type;
+                        capa = capa.layer;
+                        if(type == 'layer'){
+                            self.addLayer(capa, groupCapasMap)
+                        } else {
+                            groupCapasMap.getLayers().extend([
+                                Tile({
+                                    name : capa.name,
+                                    service_url : capa.service_url,
+                                    layers : capa.name
+                                })
+                            ]);
+                        }
+                    });
                     Materialize.toast('Mapa cargado : ' + mapa.mapName, 2500);
                 })
             })
@@ -373,3 +396,10 @@ $('body').resize(function(){
     console.log('fullscreen');
 })
 */
+
+function findPositionInOrder(lid, ltype, orderList){
+    return orderList.reduce(function(a, b){
+        if(b.layer_type == ltype && lid === b.id_layer) a = b.position;
+        return a;
+    }, null);
+}

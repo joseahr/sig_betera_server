@@ -4,6 +4,8 @@ const sql = require('../sql').maps;
 
 module.exports = (rep, pgp) => {
     return {
+        getOrder : id =>
+            rep.any(sql.getOrder, { id_map : pgp.as.value(id_map) }),
         // Crea la tabla de mapas
         createMapsTable : ()=> rep.none(sql.createMapsTable),
         // Crea la tabla de mapas-users
@@ -50,7 +52,6 @@ module.exports = (rep, pgp) => {
                 : this.getDefaultMaps();
             return promise
             .then(listOfMaps =>{
-                console.log(listOfMaps, 'lisssssst');
                 if(!listOfMaps) return Promise.resolve(null);
                 return rep.tx( t =>{
                     console.log(listOfMaps);
@@ -62,7 +63,7 @@ module.exports = (rep, pgp) => {
                     })
                     .then(mapBaseLayers =>{
                         return listOfMaps.reduce( (arr, map, idx) =>{
-                            let obj = { id : map.id, mapName : map.name, maplayerIds : mapLayers[idx] };
+                            let obj = { id : map.id, mapName : map.name, maplayerIds : mapLayers[idx], orden : map.orden };
                             obj['mapbaselayerIds'] = mapBaseLayers[idx] 
                                 ? mapBaseLayers[idx] 
                                 : [];

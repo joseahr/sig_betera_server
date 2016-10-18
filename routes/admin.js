@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { db, pgp } = require('../db');
+const mailer = require('../mailer');
 /* GET home page. */
 
 /*
@@ -315,14 +316,14 @@ router.route('/baselayers')
 });
 
 
-router.route('/mail/groups')
+router.route('/mail/send')
 .post( (req, res)=>{
-    
-});
-
-router.route('/mail/users')
-.post( (req, res)=>{
-    
+    let { titulo, cuerpo, destinatarios } = req.body;
+    destinatarios = JSON.parse(destinatarios);
+    if(!titulo || !cuerpo || !destinatarios) return res.status(500).json('Faltan parámetros');
+    mailer.sendTextMailTo(titulo, cuerpo, ...destinatarios)
+    .then( ()=> res.status(200).json('OK'))
+    .catch(err => res.status(500).json('Error'));
 });
 
 
