@@ -19,6 +19,10 @@ block header
                 .container
                     .nav-wrapper
                     a.brand-logo SIG Bétera
+                    ul.left.hide-on-large-only(style="padding-right : 10px;")
+                        li
+                            a#menu-mobile.button-collapse(href="#" data-activates="slide-out")
+                                i.material-icons menu
                     ul#nav-mobile.right.hide-on-med-and-down
                         li
                             a(href="/visor") Visor
@@ -66,19 +70,20 @@ block content
         table#mapas-default-table.display.highlight(cellspacing="0" width="100%")
             thead
                 tr
-                    each k in ['id', 'name', 'layers', 'baselayers']
+                    each k in ['id', 'name']
                         th #{k}
                     th.no-sort
                         i.material-icons(style="cursor : default; ") remove_circle_outline
             tbody
                 each mapa in (allDefaultMaps || []).sort(function(a, b){ return a.id > b.id})
                     tr
-                        each k in ['id', 'name', 'layers', 'baselayers']
+                        each k in ['id', 'name']
                             td #{mapa[k]}
                         td
                             i.red-text.delete-map-default-btn.material-icons(map-id="#{mapa.id}" style="cursor : pointer;") remove_circle_outline
     #capas.seccion(style=" top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;")
         .card-panel.indigo.white-text Capas PostGIS
+            i.create-layer-btn.material-icons.white-text(style="float : right; cursor : pointer;") add_circle_outline
         table#capas_table.display.highlight(cellspacing="0" width="100%")
             thead
                 tr
@@ -90,6 +95,7 @@ block content
                         each k in Object.keys(allLayers[0])
                             td #{capa[k]}
         .card-panel.indigo.white-text Servicios WMS
+            i.create-baselayer-btn.material-icons.white-text(style="float : right; cursor : pointer;") add_circle_outline
         table#capas_wms_table.display.highlight(cellspacing="0" width="100%")
             thead
                 tr
@@ -122,36 +128,28 @@ block content
                     li
                         .collapsible-header.indigo-text
                             form(action="#")
-                                if allUsers.reduce(function(a, b){ if(b.grupos.indexOf(grupo) > -1) a.push(b); return a;}, []).length
+                                if allUsers.reduce(function(a, b){ if( (b.grupos || []).indexOf(grupo) > -1) a.push(b); return a;}, []).length
                                     input.input-group(type='checkbox' id="grupo-#{grupo}" disabled=false)
                                 else
                                     input.input-group(type='checkbox' id="grupo-#{grupo}" disabled=true)
                                 label.indigo-text(for="grupo-#{grupo}") #{grupo}
                         .collapsible-body
                             ul.collection
-                                each user in allUsers.reduce(function(a, b){ if(b.grupos.indexOf(grupo) > -1) a.push(b); return a;}, [])
+                                each user in allUsers.reduce(function(a, b){ if( (b.grupos || []).indexOf(grupo) > -1) a.push(b); return a;}, [])
                                     li.collection-item
                                         form(style="margin-left : 3em;" action="#")
                                             input.input-user(id="#{grupo}-#{user.name}" email="#{user.email}" type='checkbox' group="grupo-#{grupo}")
                                             label(for="#{grupo}-#{user.name}") Nombre : #{user.name}   Email : #{user.email}
     // Menú lateral
-    ul#slide-out.side-nav.fixed(style="margin-top : 64px;")
-        a#close-sidenav(href="#" style="position : absolute ; right : 0em; top : 0em; font-size : 2em; z-index : 1;" class="material-icons red-text hide-on-large-only") clear
+    ul#slide-out.side-nav.fixed(style="margin-top : 64px; z-index : 1000;")
         li(style="background : url('http://www.betera.com/wp-content/uploads/policia-local-31.jpg'); background-size : 150%;")
             .userView
                 a()
                     i.material-icons.prefix.circle.white-text.darken-2(style="font-size : 5em;") account_circle
-                if (user)
-                    a()
-                        span.black-text.name #{user.name}
-                    a(href='#!email')
-                        span.black-text.email #{user.email}
-                else
-                    a()
-                        span.black-text.name Usuario Invitado
-                    a()
-                        span.black-text.email -----			
-
+                a()
+                    span.black-text.name #{user.name}
+                a(href='#!email')
+                    span.black-text.email #{user.email}
         li.bold.active
             a(href='/') 
                 | Inicio
@@ -185,6 +183,45 @@ block content
         li
             a.subheader Footer Prueba
     // Modal Structure
+    #new-layer.modal.modal-fixed-footer
+        .modal-header.card-panel.indigo.white-text(style="pointer : default !important; margin-top : 0px;") Nueva Capa Postgis
+        .modal-content.row
+            form#upload-layer-form(action='#' enctype="multipart/form-data")
+                .row
+                    .input-field.col.s12
+                        input#nombre_capa.validate(placeholder='Nombre de la capa', type='text')
+                        label(for='first_name') Nombre de la capa
+                .file-field.input-field
+                    .btn.col.s2
+                        span SHP
+                        input(type='file', multiple='multiple')
+                    .file-path-wrapper
+                        input.file-path.validate(type='text', placeholder='Añade SHP SHX y DBF' name="shps[]")
+                button.btn.waves-effect.waves-light(name="action" type="submit") Subir Capa
+                    i.material-icons.right send                
+        .modal-footer
+            a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cerrar
+    #new-baselayer.modal.modal-fixed-footer
+        .modal-header.card-panel.indigo.white-text(style="pointer : default !important; margin-top : 0px;") Nueva Conexión WMS
+        .modal-content.row
+            form#get-layers-wms-form(action='#' enctype="multipart/form-data")
+                .row
+                    .input-field.col.s12
+                        input#url_servicio.validate(placeholder='Url del servicio', type='text')
+                        label(for='first_name') Url del servicio
+                .col.s6.offset-s3
+                    button.btn.waves-effect.waves-light(name="action" type="submit") Obtener Capas
+                        i.material-icons.right send
+            form#upload-baselayer-form(action="#")
+                .input-field.col.s12(style="margin-top : 30px;")
+                    select#select-capas-wms(multiple='')
+                        option(selected="" disabled="" value="") Elige capas a añadir
+                    label Capas del servicio
+                .col.s6.offset-s3
+                    button.btn.waves-effect.waves-light(name="action" type="submit" disabled="") Añadir Servicio WMS
+                        i.material-icons.right send
+        .modal-footer
+            a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cerrar
     #user-detail.modal.modal-fixed-footer
         .modal-header.card-panel.indigo.white-text(style="pointer : default !important; margin-top : 0px;") Editar Usuario
         .modal-content
@@ -231,4 +268,5 @@ block script
         var allBaseLayers = JSON.parse('!{JSON.stringify(allBaseLayers)}');
         var allGroups = JSON.parse('!{JSON.stringify(allGroups)}');
         $('.collapsible').collapsible();
+        $('.button-collapse').sideNav();
     script(src="/javascripts/admin.js")

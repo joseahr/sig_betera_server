@@ -57,7 +57,8 @@ module.exports = {
         findBy: sql('users/find_by.sql'),
         getAllGroups : sql('users/get-all-groups.sql'),
         isValid : sql('users/is-valid.sql'),
-        findIdByToken : sql('users/find-by-validate-token.sql')
+        findIdByToken : sql('users/find-by-validate-token.sql'),
+        createForgetToken : sql('users/create-forget-token.sql')
     },
     raster : {
         perfil : sql('raster/perfil.sql')
@@ -71,7 +72,8 @@ module.exports = {
         getLayerNames : sql('layers/layer-names.sql'),
         getBaseLayer : sql('layers/base-layer.sql'),
         getAllLayers : sql('layers/get-all-layers.sql'),
-        getAllBaseLayers : sql('layers/get-all-base-layers.sql')
+        getAllBaseLayers : sql('layers/get-all-base-layers.sql'),
+        getFeaturesIntersecting : sql('layers/get-features-intersecting.sql')
     },
     roles : {
         create : sql('roles/create.sql'),

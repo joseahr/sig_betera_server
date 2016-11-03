@@ -1,4 +1,4 @@
-SELECT *, o.*
+SELECT *
 FROM Maps m
 LEFT JOIN User_Maps um ON um.id_map = m.id
 LEFT JOIN LATERAL (

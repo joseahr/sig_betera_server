@@ -6,7 +6,7 @@
 
 const app = require('../app');
 const debug = require('debug')('sig_betera_server:server');
-const https = require('https');
+//const https = require('https');
 const http = require('http');
 const fs = require('fs');
 
@@ -39,11 +39,9 @@ server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 
-/*
-secureServer.listen(443);
-secureServer.on('error', onError);
-secureServer.on('listening', onListening);
-*/
+
+//secureServer.listen(5000);
+
 
 /**
  * Normalize a port into a number, string, or false.

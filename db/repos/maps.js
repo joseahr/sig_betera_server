@@ -42,19 +42,27 @@ module.exports = (rep, pgp) => {
         getBaseLayers : (id_map)=> 
             rep.manyOrNone(sql.getBaseLayers, { id_map : pgp.as.value(id_map) })
             .then(layers => layers.length ? layers.map(l => l.id_base_layer) : undefined),
-        // Obtener las capas de un usuario que necesitan darse permisos
-        // Por ejemplo : Un usuario se le asigna un mapa
-        // En ciertas capas del mapa puede no tener permisos de lectura
-        // y habría que dárselos para que pudiera ver la capa
+
         getMapsAndLayers : function(id_user){
-            let promise = id_user
-                ? this.getMaps(id_user)
-                : this.getDefaultMaps();
-            return promise
+            let promises = [ this.getDefaultMaps() ];
+            if(id_user) promises.push( this.getMaps(id_user) );
+
+            return Promise.all(promises)
             .then(listOfMaps =>{
+                let mapIds = [];
+                listOfMaps = [...(listOfMaps[1] || []), ...(listOfMaps[0] || [])];
+                listOfMaps = listOfMaps.reduce( (list, el)=>{
+                    if(mapIds.indexOf(el.id) == -1){
+                        mapIds.push(el.id);
+                        list.push(el);
+                    }
+                    return list;
+                }, []);
+
+                console.log(listOfMaps);
                 if(!listOfMaps) return Promise.resolve(null);
                 return rep.tx( t =>{
-                    console.log(listOfMaps);
+
                     return t.batch(listOfMaps.map( m => m.id ).map(this.getLayers))
                 })
                 .then(mapLayers =>{
@@ -63,7 +71,13 @@ module.exports = (rep, pgp) => {
                     })
                     .then(mapBaseLayers =>{
                         return listOfMaps.reduce( (arr, map, idx) =>{
-                            let obj = { id : map.id, mapName : map.name, maplayerIds : mapLayers[idx], orden : map.orden };
+                            let obj = { 
+                                id : map.id
+                                , mapName : map.name
+                                , maplayerIds : mapLayers[idx]
+                                , orden : map.orden
+                                , visible : map.visible
+                            };
                             obj['mapbaselayerIds'] = mapBaseLayers[idx] 
                                 ? mapBaseLayers[idx] 
                                 : [];

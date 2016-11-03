@@ -2,9 +2,17 @@ const express = require('express');
 const router = express.Router();
 const { db, pgp } = require('../db');
 const mailer = require('../mailer');
+
+const fs = require('fs');
+const path = require('path');
+
+const capabilitiesParser = require('../capabilities-parser');
+
+const Multer = require('../multer');
+const multer = Multer.createMulter(Multer.TEMP_DIR_SHP, Multer.fileNameSHP, 50*1024*1024).array('shps[]', 3) // .shp .dbf .shx;
 /* GET home page. */
 
-/*
+
 router.use( (req, res, next)=>{
     if(!req.isAuthenticated())
         return res.status(406).json('Permiso denegado');
@@ -12,7 +20,7 @@ router.use( (req, res, next)=>{
         return res.status(406).json('Permiso denegado');
     next();
 });
-*/
+
 
 router.get('/', (req, res)=>{
     Promise.all([
@@ -301,19 +309,71 @@ router.route('/maps/order')
 
 router.route('/layers')
 .post( (req, res)=>{
-    
+    console.log(req.query.layerName);
+    multer(req, res, error =>{
+        if(error) return res.status(500).json('No se pudo subir el archivo SHP : ' + error);
+        console.log(req.files);
+        let filesExt = req.files.map( f => path.extname(f.originalname) );
+        if( !['.shp', '.shx', '.dbf'].every( ext => filesExt.find( fext => fext === ext) ) ){
+            return Multer.removeFiles(...req.files.map( f => f.path ) )
+            .then( ()=> res.status(500).json('Debe añadir al menos los archivos .shp .shx .dbf') )
+            .catch(res => res.status(500).json(err) )
+        }
+        let shpPath = path.join(
+            './',
+            path.dirname(req.files[0].path)
+            , path.basename( req.files[0].path, path.extname(req.files[0].path) ) + '.shp'
+        );
+        let tableName =req.query.layerName || path.basename( req.files[0].path, path.extname(req.files[0].path) );
+        console.log(shpPath, tableName);
+        db.users.layers.exist(tableName)
+        .then(exist =>{
+            if(exist) {
+                Multer.removeFiles(...req.files.map( f => f.path ) )
+                return res.status(500).json(`La tabla ${tableName} ya existe`);
+            }
+
+            db.users.layers.importSHP(shpPath, tableName)
+            .then( ()=> res.status(200).json('OK'))
+            .catch( err => res.status(500).json(err))
+            .finally( ()=> Multer.removeFiles(...req.files.map( f => f.path ) ) );
+        })
+        .catch( err => Multer.removeFiles(...req.files.map( f => f.path ) ).then( ()=> res.status(500).json(err) ) );
+    });
 })
 .delete( (req, res)=>{
-    
+    let tableName = req.body.tableName;
+    db.none("DROP TABLE IF EXISTS ${tableName^} CASCADE", { tableName })
+    .then( ()=> res.status(200).json('OK') )
+    .catch(err => res.status(500).json(err) );  
 });
 
 router.route('/baselayers')
 .post( (req, res)=>{
-    
+    let { service_url, layers } = req.body;
+    console.log(req.body);
+    if(!service_url) return res.status(500).json('Debe introducir una url del servicio');
+    if (!layers || !layers.length) return res.status(500).json('Debe seleccionar al menos una capa');
+
+    capabilitiesParser.parse(service_url)
+    .then(layersCap =>{
+        if (!layersCap || !layersCap.length) return res.status(500).json('No es un capabilities válido');
+        let layerCapNames = layersCap.map( l => l['Name'] );
+        if( layers.some( l => !layerCapNames.find( lcn => lcn === l) ) ) 
+            return res.status(500).json('El nombre de algunas capas seleccionadas no aparece en el doc de capacidades');
+        // Actualizar bdd
+        db.none("INSERT INTO base_layers(service_url, name) VALUES('${service_url#}', '${layers#}')", { service_url : service_url.split('?')[0], layers : layers.join() })
+        .then( ()=> res.status(200).json('OK') )
+        .catch(err => res.status(500).json(err) );
+    })
 })
 .delete( (req, res)=>{
-    
+    let id = req.body.id;
+    db.none("DELETE FROM base_layers WHERE id = '${id#}'", { id })
+    .then( ()=> res.status(200).json('OK') )
+    .catch(err => res.status(500).json(err) );  
 });
+
 
 
 router.route('/mail/send')

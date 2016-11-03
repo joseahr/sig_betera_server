@@ -27,14 +27,6 @@ const sendTextMailTo = (subject, text, ...destinators)=>{
     return sendMail({from, subject, text, to});
 }
 
-// Exportamos las dos funciones creadas y el objeto transporter
-//  por si hiciera falta
-module.exports = {
-    transporter,
-    sendHTMLMailTo,
-    sendTextMailTo
-}
-
 //var mailOptions = {
 //    from: '"Fred Foo 👥" <foo@blurdybloop.com>', // sender address
 //    to: 'joherro3@topo.upv.es', // list of receivers
@@ -42,3 +34,23 @@ module.exports = {
 //    text: 'Hello world 🐴', // plaintext body
 //    html: '<b>Hello world 🐴</b>' // html body
 //};
+
+const defaultMessages = {
+    forgotPassword : {
+        subject : name => `Hola, ${name}, recupera tu contraseña.`,
+        content : (nombre, apellidos, token) => `
+            Hola, ${nombre} ${apellidos}, usted ha pedido cambiar su contraseña.<br>
+            Para recuperar su cuenta, por favor, diríjase a la siguiente dirección<br>
+            <a href="http://localhost:3000/usuarios/password/${token}">http://localhost:3000/usuarios/password/${token}</a>
+        `
+    }
+};
+
+// Exportamos las dos funciones creadas y el objeto transporter
+//  por si hiciera falta
+module.exports = {
+    transporter,
+    sendHTMLMailTo,
+    sendTextMailTo,
+    defaultMessages
+}

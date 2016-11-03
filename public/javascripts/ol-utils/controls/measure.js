@@ -2,10 +2,48 @@ function MeasureControl(mapController){
     var mainbar = mapController.mainbar;
     var map = mapController.getMap();
 
+    var measurePointStyle = new ol.style.Style({
+        image: new ol.style.Circle({
+            radius: 5,
+            stroke: new ol.style.Stroke({
+                color: '#000'
+            })
+        })
+    }); 
+
+    var measureLineStyle = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: [48, 63, 159],
+            width: 3
+        })
+    });
+
+    var measurePolygonStyle = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: [48, 63, 159],
+            width: 3
+        }),
+        fill : new ol.style.Fill({
+            color: [48, 63, 159, 0.5],
+            opacity : 0.5
+        })
+    });
+
+    var measureStyles = {
+        'Point' : measurePointStyle,
+        'LineString' : measureLineStyle,
+        'Polygon' : measurePolygonStyle
+    };
+
+    var measureStyleFunction = function(feature, resolution){
+        return measureStyles[feature.getGeometry().getType()];
+    }
+
     var vectorMeasure = new ol.layer.Vector({
         name : 'vector medir',
         displayInLayerSwitcher : false,
-        source : new ol.source.Vector()
+        source : new ol.source.Vector(),
+        style : measureStyleFunction
     });
     map.addLayer(vectorMeasure);
 
@@ -77,7 +115,9 @@ function MeasureControl(mapController){
             var it = new ol.interaction.Draw({
                 source : vectorMeasure.getSource(),
                 type : 'LineString',
+                style : measureStyleFunction
             });
+
             it.on('drawstart', drawStart);
             it.on('drawend', drawEnd);
 
@@ -113,6 +153,7 @@ function MeasureControl(mapController){
             var it = new ol.interaction.Draw({
                 source : vectorMeasure.getSource(),
                 type : 'Polygon',
+                style : measureStyleFunction
             });
             it.on('drawstart', drawStart);
             it.on('drawend', drawEnd);

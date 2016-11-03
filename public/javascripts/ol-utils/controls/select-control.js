@@ -2,7 +2,14 @@ function getTableRow(obj){
     var tr = $('<tr>');
     Object.keys(obj).map(function(k){
         if(k == 'geometry' || k == 'layerName') return;
-        $('<td>').html(obj[k]).appendTo(tr); 
+        if(k === 'data_urls' && obj[k]){
+            obj[k].reduce(function(td, el){
+                $('<a>').addClass('truncate').attr('target', '_blank').attr('href', el.url).html( el.url.split('/').pop() ).appendTo(td);
+                td.append('<br>');
+                return td;
+            }, $('<td>') ).appendTo(tr);
+        } 
+        else $('<td>').html(obj[k]).appendTo(tr); 
     });
     return tr;
 }
@@ -65,12 +72,6 @@ function SelectControl(mapController){
                     control.onToggle.call(control);
                 }
             });
-
-            if (!mapController.mobileAndTabletcheck()){
-                listener = map.on('pointermove', handleSelect.bind(mapController));
-            } else {
-                listener = map.on('click', handleSelectClick.bind(mapController));
-            }
         },
         tooltip : {
             text : 'Seleccionar Features',
@@ -78,174 +79,232 @@ function SelectControl(mapController){
             position : 'bottom'
         }
     });
-    mainbar.addControl(controlSelect);
-}
 
-// Función para disp. móviles
-function handleSelectClick(e){
-    var hayFeatures = false;
-    var self = this;
+    var featuresSelectSubBar = new ol.control.Bar();
 
-    this.sourceSelectedFeatures.clear();
-    this.layers.forEach(function(c){
-        var source = c.getSource();
-        var features = source.getFeaturesAtCoordinate(e.coordinate);
-        //console.log(c.get('geomColumnType'));
-        if(!features.length && (c.get('geomColumnType') === 'LineString' || c.get('geomColumnType') === 'Point') ){
-            var feature = source.getClosestFeatureToCoordinate(e.coordinate);
-            //console.log(c.get('geomColumnType'), 'No features At coordinate', feature);
-            if(feature){
-                var ext = feature.getGeometry().getExtent();
-                var cc = ol.extent.getCenter(ext);
-                var distance = c.get('geomColumnType') === 'Point' 
-                    ? ol.sphere.WGS84.haversineDistance(
-                        ol.proj.transform(e.coordinate, 'EPSG:25830', 'EPSG:4326'),
-                        ol.proj.transform(cc, 'EPSG:25830', 'EPSG:4326') 
-                    )
-                    : ol.sphere.WGS84.haversineDistance(
-                        ol.proj.transform(feature.getGeometry().getClosestPoint(e.coordinate), 'EPSG:25830', 'EPSG:4326'),
-                        ol.proj.transform(e.coordinate, 'EPSG:25830', 'EPSG:4326')
-                    ); 
-                if(distance < 0.5) {
-                    hayFeatures = true;
-                    feature.set('layerName', c.get('name'));
-                    self.sourceSelectedFeatures.addFeature(feature);
-                    self.map.getTargetElement().style.cursor = 'pointer';
-                }
-                //console.log(c.get('name'), distance);
-            }
-            // Calcular la distancia
-        }
-        else if(features.length){
-            hayFeatures = true;
-            //console.log(c.get('name'), features);
-            self.map.getTargetElement().style.cursor = 'pointer';
-            features.forEach(function(f){
-                f.set('layerName', c.get('name'));
-                self.sourceSelectedFeatures.addFeature(f);
-            })
+    var sourcePointControlSelect = new ol.source.Vector();
+    var featuresPerPointControl = new ol.control.Toggle({
+        name : 'select',
+        html : '<i class="material-icons">place</i>',
+        tooltip : {
+            text : 'Por Punto',
+            delay : 50,
+            position : 'bottom'
+        },
+        interaction : new ol.interaction.Draw({
+            source : sourcePointControlSelect,
+            type : 'Point'
+        }),
+        onToggle : function(){
+            if(this.getActive()){
+                $(this.element).find('i').css('color', 'rgba(60, 136, 0, 0.7)')}
+            else
+                $(this.element).find('i').css('color', 'rgba(0, 60, 136, 0.5)');
+            
+            if(!this.getActive()) return;
+
+            featuresPerAreaControl.setActive(false);
+            featuresPerAreaControl.onToggle.call(featuresPerAreaControl);
+            featuresPerBBOXControl.setActive(false);
+            featuresPerBBOXControl.onToggle.call(featuresPerBBOXControl);
         }
     });
+    featuresPerPointControl.getInteraction().on('drawend', function(e){
+        var feature = e.feature;
+        sourcePointControlSelect.clear();
+        var pointGeoJSON = mapController.parsers['wkt'].writeFeature(feature);
+        handleGetInfo(pointGeoJSON);
+    });
+    featuresSelectSubBar.addControl(featuresPerPointControl);
 
-    //alert('handle' + hayFeatures + self.sourceSelectedFeatures.getFeatures().length);
 
-    if(!hayFeatures) return;
-    showTable(self);
-}
+    var sourcePolygonControlSelect = new ol.source.Vector();
+    var featuresPerAreaControl = new ol.control.Toggle({
+        name : 'select',
+        html : '<i class="material-icons">bookmark</i>',
+        tooltip : {
+            text : 'Por Area',
+            delay : 50,
+            position : 'bottom'
+        },
+        interaction : new ol.interaction.Draw({
+            source : sourcePolygonControlSelect,
+            type : 'Polygon'
+        }),
+        onToggle : function(){
+            if(this.getActive()){
+                $(this.element).find('i').css('color', 'rgba(60, 136, 0, 0.7)')}
+            else
+                $(this.element).find('i').css('color', 'rgba(0, 60, 136, 0.5)');
+            
+            if(!this.getActive()) return;
 
-/******* 
- * SELECT HOVERRRR
- * 
- * 
- * 
- */
-// Listener click mapa para seleccionar features hover
-var listenerClick;
-// función que se ejecita al hacer hover
-function handleSelect(e){
-    var self = this;
-    // Eliminamos todas las features de la capa
-    this.sourceSelectedFeatures.clear();
-    // Creamos el listener map.once()
-    createListenerClick(self);
-    // boolean que indica si se seleccionan feats o no
-    var hayFeatures = false;
-    this.layers.forEach(function(c){
-        var source = c.getSource();
-        var features = source.getFeaturesAtCoordinate(e.coordinate);
-        //console.log(c.get('geomColumnType'));
-        // Solo hacemos esto para líneas y puntos, ya que la interaction.Select de OL-3
-        // no los selecciona "bien"
-        if(!features.length && (c.get('geomColumnType') === 'LineString' || c.get('geomColumnType') === 'Point') ){
-            // Obtenemos la feature más cercana al punto clicado
-            var feature = source.getClosestFeatureToCoordinate(e.coordinate);
-            // Si hay feature
-            if(feature){
-                var ext = feature.getGeometry().getExtent();
-                var cc = ol.extent.getCenter(ext);
-                // Calculamos la distancia al punto clicado
-                var distance = c.get('geomColumnType') === 'Point' 
-                    ? distancePointPoint(e.coordinate, cc)
-                    : distancePointPoint(feature.getGeometry().getClosestPoint(e.coordinate), e.coordinate);
-
-                if(distance < 0.5) {
-                    hayFeatures = true;
-                    feature.set('layerName', c.get('name'));
-                    self.sourceSelectedFeatures.addFeature(feature);
-                    self.map.getTargetElement().style.cursor = 'pointer';
-                }
-                //console.log(c.get('name'), distance);
-            }
-            // Calcular la distancia
-        }
-        else if(features.length){
-            hayFeatures = true;
-            //console.log(c.get('name'), features);
-            self.map.getTargetElement().style.cursor = 'pointer';
-            features.forEach(function(f){
-                f.set('layerName', c.get('name'));
-                self.sourceSelectedFeatures.addFeature(f);
-            })
+            featuresPerPointControl.setActive(false);
+            featuresPerPointControl.onToggle.call(featuresPerPointControl);
+            featuresPerBBOXControl.setActive(false);
+            featuresPerBBOXControl.onToggle.call(featuresPerBBOXControl);
         }
     });
+    featuresPerAreaControl.getInteraction().on('drawend', function(e){
+        var feature = e.feature;
+        sourcePolygonControlSelect.clear();
+        var pointGeoJSON = mapController.parsers['wkt'].writeFeature(feature);
+        handleGetInfo(pointGeoJSON);
+    });
+    featuresSelectSubBar.addControl(featuresPerAreaControl);
 
-    this.sourceSelectedFeatures.changed();
+    var featuresPerBBOXControl = new ol.control.Toggle({
+        name : 'select',
+        html : '<i class="material-icons">crop_square</i>',
+        tooltip : {
+            text : 'Por BBOX',
+            delay : 50,
+            position : 'bottom'
+        },
+        interaction : new ol.interaction.DragBox({
 
-    if(!hayFeatures) {
-        this.map.un(listenerClick);
-        this.map.getTargetElement().style.cursor = 'auto';
-        //sourceSelectedFeatures.clear();
+        }),
+        onToggle : function(){
+            if(this.getActive()){
+                $(this.element).find('i').css('color', 'rgba(60, 136, 0, 0.7)')}
+            else
+                $(this.element).find('i').css('color', 'rgba(0, 60, 136, 0.5)');
+            
+            if(!this.getActive()) return;
+
+            featuresPerPointControl.setActive(false);
+            featuresPerPointControl.onToggle.call(featuresPerPointControl);
+            featuresPerAreaControl.setActive(false);
+            featuresPerAreaControl.onToggle.call(featuresPerAreaControl);
+        }
+    });
+    featuresPerBBOXControl.getInteraction().on('boxend', function(e){
+        var feature = new ol.Feature({ geometry : featuresPerBBOXControl.getInteraction().getGeometry() });
+        sourcePolygonControlSelect.clear();
+        var pointGeoJSON = mapController.parsers['wkt'].writeFeature(feature);
+        handleGetInfo(pointGeoJSON);
+    });
+    featuresSelectSubBar.addControl(featuresPerBBOXControl);
+
+
+    mainbar.addControl(controlSelect, featuresSelectSubBar);
+
+}
+
+function handleGetInfo(wkt){
+    console.log(wkt);
+
+    var selectedLayers = [];
+    mapController.map.getLayers().forEach(function(l){
+        console.log(l);
+        if(l.getVisible() && l.get('layers') && l.get('mapa'))
+            l.getLayers().forEach(function(ll){
+                console.log(ll.getSource().getUrls(), ll instanceof ol.layer.Tile, ll.getUrl, ll.geUrls );
+                if(ll.getVisible() && ll.getSource().getUrls()[0] == 'http://www.sig.betera.es:8080/geoserver/betera/wms') selectedLayers.push(ll.get('name'));
+            })
+    });
+    console.log(selectedLayers);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/usuarios/capas/byGeom', true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4){
+            //console.log(xhr.responseText);
+            if(xhr.status >= 200 && xhr.status < 400){
+                console.log(JSON.parse(xhr.responseText));
+                showTable(JSON.parse(xhr.responseText), mapController);
+                Materialize.toast('Consulta realizada satisfactoriamente.', 2000);
+            }
+        }
     }
-    //alert(hayFeatures);
+    xhr.send($.param([
+        { name : 'wkt', value : wkt },
+        { name : 'layers', value : selectedLayers }
+    ]));
+
 }
 
-function createListenerClick(self){
-    var listenerClick = self.map.once('click', function(){
-        if(!self.sourceSelectedFeatures.getFeatures().length) return;
-        showTable(self);
-    });
-}
-
-function distancePointPoint(clicked, dest){
-    return ol.sphere.WGS84.haversineDistance(
-        ol.proj.transform(clicked, 'EPSG:25830', 'EPSG:4326'),
-        ol.proj.transform(dest, 'EPSG:25830', 'EPSG:4326') 
-    );
-}
-
-function showTable(self){
+function showTable(objs, self){
     $('#modal-feature .modal-content').empty();
-    self.sourceSelectedFeatures.forEachFeature(function(f){
-        var props = f.getProperties();
-        var layerName = f.get('layerName');
-        var table = getTable(props);
+
+    objs.forEach(function(obj){
+        if(!obj.found.features) return;
+        var layerName = obj.layername;
+        var props_ = obj.found.features[0].properties;
+        var table = getTable(props_);
+        console.log(obj);
+
         $('#modal-feature .modal-content')
         .append('<div class="card-panel col s12" style="background : rgba(48,63,159, 0.3); padding : 10px; width : 100%; color : #fff;">' + layerName + '</div>')
         .append('<div style="height : 5px;"></div>')
         //.append(getTableHeader(props))
         .append(table)
         .append('<tr style="height : 5px;"></tr>');
-        table.find('tbody').append(
-            getTableRow(props)
-            .hover(function(){
-                this.style.cursor = 'pointer';
-                this.style.background = 'rgba(48,63,120, 0.3)';
-                this.style.color = '#fff';
-                self.sourceSelectedFeatures.clear();
-                self.sourceSelectedFeatures.addFeature(f);
-            }, function(){
-                this.style.color = '#000';
-                this.style.background = '#fff';
-                self.sourceSelectedFeatures.clear();
-            })
-            .click(function(){
-                var extent = f.getGeometry().getExtent();
-                self.map.getView().fit(extent, self.map.getSize());
-            })
-        )
+
+        obj.found.features.forEach(function(f){
+            var props = f.properties;
+
+            table.find('tbody').append(
+                getTableRow(props)
+                .hover(function(){
+                    this.style.cursor = 'pointer';
+                    this.style.background = 'rgba(48,63,120, 0.3)';
+                    this.style.color = '#fff';
+                    //self.sourceSelectedFeatures.clear();
+                    //self.sourceSelectedFeatures.addFeature(f);
+                }, function(){
+                    this.style.color = '#000';
+                    this.style.background = '#fff';
+                    //self.sourceSelectedFeatures.clear();
+                })
+                .click(function(){
+                    var geom;
+                    console.log(f.geometry.coordinates);
+                    switch(f.geometry.type.toLowerCase()){
+                        case 'linestring' :
+                        case 'multilinestring':
+                            geom = new ol.geom.LineString(f.geometry.coordinates[0]);break;
+                        case 'pollygon' :
+                        case 'multipolygon':
+                            geom = new ol.geom.Polygon(f.geometry.coordinates[0]);break;
+                        default :
+                            geom = new ol.geom.Point(f.geometry.coordinates);break;
+                    }
+                    var extent = new ol.Feature({
+                        geometry : geom
+                    }).getGeometry().getExtent();
+                    self.map.getView().fit(extent, self.map.getSize());
+                    var center = ol.extent.getCenter(extent);
+                    pulseFeature(center);
+                })
+            )
+        });
     });
 
     modalSelectDisp.trigger('click');
     $('.lean-overlay').remove();
     //self.updateSize('bottom', $('#modal-feature').innerHeight());
+}
+
+function pulseFeature(coord)
+{	
+    if(!this.count) this.count = 0;
+
+    var map = mapController.map;
+    var f = new ol.Feature (new ol.geom.Point(coord));
+    f.setStyle (new ol.style.Style(
+                {	image: new ol.style['Circle'] (
+                    {	radius: 20, 
+                        points: 4,
+                        stroke: new ol.style.Stroke ({ color: '#ffbb00', width:3 })
+                    })
+                }));
+    map.animateFeature (f, new ol.featureAnimation.Zoom(
+        {	fade: ol.easing.easeOut, 
+            duration:3000, 
+            easing: ol.easing['upAndDown'] 
+        }));
+    this.count ++;
+    if(count < 4) setTimeout(pulseFeature.bind(this, coord), Math.random() * 300 );
+    else this.count = 0;
 }

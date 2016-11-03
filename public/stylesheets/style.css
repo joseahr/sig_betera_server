@@ -117,10 +117,6 @@ table td, table th {
   overflow-y : scroll;
 }
 
-.modal-header {
-  cursor : crosshair;
-}
-
 .modal-content {
   margin : 20 10 20 10px;
 }

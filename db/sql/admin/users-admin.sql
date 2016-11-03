@@ -11,9 +11,12 @@ LEFT JOIN LATERAL (
 LEFT JOIN LATERAL (
 	SELECT json_agg(rr)::json AS layers_rol
 	FROM (
-		SELECT roles.*, layers.name
-		FROM roles, layers
-		WHERE roles.id_user = u.id AND roles.id_layer = layers.id
+		SELECT DISTINCT ml.id_layer, r.rol, l.name
+		FROM user_maps um
+		LEFT JOIN map_layers ml ON ml.id_map = um.id_map
+		LEFT JOIN roles r ON r.id_layer = ml.id_layer AND r.id_user = u.id
+		LEFT JOIN layers l ON l.id = ml.id_layer
+		WHERE um.id_user = u.id
 	) rr
 ) roles_ ON TRUE
 LEFT JOIN LATERAL (
@@ -44,14 +47,11 @@ LEFT JOIN LATERAL (
 			SELECT json_agg(layers_)::json AS layers 
 			FROM (
 				-- Seleccionamos el id de la tabla map_layers
-				SELECT ml.id_layer, ll.name, r.rol
+				SELECT ml.id_layer, ll.name
 				FROM map_layers ml
 				-- Lo unimos con la tabla layers para obtener
 				-- el nombre de la capa
 				LEFT JOIN layers ll ON ll.id = ml.id_layer
-				LEFT JOIN roles r ON r.id_layer = ml.id_layer
-					AND r.id_user = u.id
-				WHERE um.id_map = ml.id_map
 			) layers_
 		) ly ON true
 		-- Seleccionamos las capas WMS --> Lo mismo que para las capas postgis

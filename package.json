@@ -19,11 +19,17 @@
     "jade": "~1.11.0",
     "jsts": "^1.2.1",
     "morgan": "~1.7.0",
+    "multer": "^1.2.0",
     "node-mailer": "^0.1.1",
+    "open": "0.0.5",
+    "openlayers": "^3.19.1",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
     "pg-monitor": "^0.5.11",
     "pg-promise": "^5.3.3",
-    "serve-favicon": "~2.3.0"
+    "request": "^2.76.0",
+    "request-promise": "^4.1.1",
+    "serve-favicon": "~2.3.0",
+    "xml2json": "^0.10.0"
   }
 }

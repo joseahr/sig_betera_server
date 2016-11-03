@@ -2,30 +2,35 @@
 function Tile(opts){
     return new ol.layer.Tile({
         name : opts.name,
+        wms_externo : options.wms_externo,
         visible : true,
         source : new ol.source.TileWMS({
             url : opts.service_url,
+            gutter : options.gutter <= 0 ? 0 : 250,
+            crossOrigin: options.crossOrigin || 'anonymous', // Configurar Geoserver para orígenes remotos primero
             params: {
                 'FORMAT': 'image/png', 
                 'VERSION': '1.1.1',
-                transparent : true,
-                tiled : true, 
+                'TRANSPARENT' : true,
+                'TILED' : true, 
                 LAYERS: opts.layers,
                 STYLES: ''
             }
         })
     });
 }
-var ignBase = new ol.layer.Tile({
-    name: 'IGN Base',
-    visible: true,
+
+var mdt25 = new ol.layer.Tile({
+    name: 'IGN MDT 25M',
+    visible: false,
     source: new ol.source.TileWMS({
-        url: 'http://www.ign.es/wms-inspire/ign-base',
+        url: 'http://www.ign.es/wms-inspire/mdt',
+        crossOrigin: 'anonymous',
         params: {'FORMAT': 'image/png', 
                 'VERSION': '1.1.1',
                 transparent : false,
                 tiled : true, 
-                LAYERS: 'IGNBaseTodo',
+                LAYERS: 'EL.GridCoverage',
                 STYLES: '',
         }
     })
@@ -34,7 +39,7 @@ var ignBase = new ol.layer.Tile({
 //Ortofoto PNOA
 var ortoPNOA = new ol.layer.Tile({
     name: 'Ortofoto PNOA',
-    visible: false,
+    visible: true,
     source: new ol.source.TileWMS({
         url: 'http://www.ign.es/wms-inspire/pnoa-ma',
         crossOrigin: 'anonymous',
@@ -56,5 +61,7 @@ var layerVectorVacia = new ol.layer.Vector({
 // Grupo de capas Base
 var groupCapasBase = new ol.layer.Group({
     name: 'Capas Base',
-    layers: [layerVectorVacia, ignBase, ortoPNOA]
+    defaultLayers : true,
+    baseLayer : true,
+    layers: [layerVectorVacia, mdt25, ortoPNOA]
 });

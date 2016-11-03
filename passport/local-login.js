@@ -22,18 +22,23 @@ let callback = (req, username, password, done)=>{
 
             if(!user) done(null, false, 'Usuario no encontrado');
             else {
-                console.log('usuario encontrado en la bdd', user, password);
-                db.users.validPassword(user, password)
-                .then(validPassword =>{
-                    console.log('Comparando contraseñas : ', validPassword)
-                    if(validPassword){
-                        req.user = user;
-                        done(null, user, 'Login Correcto');
-                    }
-                    else 
-                        done(null, false, 'contraseña no coincide');
+                db.users.isValid(user.id)
+                .then( isValid =>{
+                    console.log(isValid);
+                    if(!isValid) return done(false, false, 'Usuario no válido. Revisa tu correo y sigue las instrucciones : ' + user.email);
+                    console.log('usuario encontrado en la bdd', user, password);
+                    db.users.validPassword(user, password)
+                    .then(validPassword =>{
+                        console.log('Comparando contraseñas : ', validPassword)
+                        if(validPassword){
+                            req.user = user;
+                            done(null, user, 'Login Correcto');
+                        }
+                        else 
+                            done(null, false, 'La contraseña no coincide');
+                    })
+                    .catch(err => done(err));
                 })
-                .catch(err => done(err));
             }
         })
         .catch(err => {

@@ -13,8 +13,6 @@ block link
 	link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css")
 	// Materialize Icons
 	link(href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet")
-	// DynaTable
-	link(rel="stylesheet" href="/javascripts/dynatables/jquery.dynatable.css")
 	// Custom CSS
 	link(rel="stylesheet" href="/stylesheets/style.css")
 block content
@@ -24,23 +22,29 @@ block content
 			a#close-sidenav(href="#" style="position : absolute ; right : 0em; top : 0em; font-size : 2em; z-index : 1;" class="material-icons red-text hide-on-large-only") clear
 			li(style="background : url('http://www.betera.com/wp-content/uploads/policia-local-31.jpg'); background-size : 150%;")
 				.userView
-					a()
-						i.material-icons.prefix.circle.white-text.darken-2(style="font-size : 5em;") account_circle
 					if (user)
+						a()
+							img.circle(src="#{user.gravatar}")
 						a()
 							span.black-text.name #{user.name}
 						a(href='#!email')
 							span.black-text.email #{user.email}
 					else
 						a()
-							span.black-text.name Usuario Invitado
+							i.material-icons.prefix.circle.white-text.darken-2(style="font-size : 5em;") account_circle
 						a()
-							span.black-text.email -----			
+							span.black-text.name Usuario Invitado			
 
 			li
 				a(href='/') Inicio
 			li
 				.divider
+			if user
+				if user.rol == 'admin'
+					li
+						a.waves-effect(href='/admin') Panel de Administador
+					li
+						.divider
 			li.no-padding
 				ul.collapsible.collapsible-accordion
 					li
@@ -50,12 +54,28 @@ block content
 						.collapsible-body#layerSwitcher
 			li
 				.divider
-			li
-				a.waves-effect(href='#!') Imprimir Mapa
+			li.no-padding
+				ul.collapsible.collapsible-accordion
+					li
+						a.collapsible-header
+							| Imprimir mapa
+							i.material-icons(style="float : right; margin : 0px;") arrow_drop_down
+						.collapsible-body
+							ul
+								li
+									a(id="export-jpg" href="#" download="mapa.jpg") JPG
+								li
+									a(id="export-png" href="#" download="mapa.png") PNG
+								li
+									a(id="export-pdf" href="#" download="mapa.pdf") PDF
 			li
 				.divider
-			li
-				a.subheader Footer Prueba
+			if user
+				li 
+					a#logout(href="#") Cerrar Sesión
+						i.red-text.left.material-icons exit_to_app
+				li
+					.divider
 	#modal-perfil.modal.bottom-sheet.hoverable
 		.modal-header.card-panel.indigo.darken-2(style="text-align : center; margin : 0px; top: 0px;")
 			h4.flow-text.white-text.text-darken-2(style="margin : 0px") Perfil
@@ -82,8 +102,6 @@ block script
 	script(src="/javascripts/ol3/ol-debug.js")
 	// MaterializeCSS (Google)
 	script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js")
-	//Dynamic Tables
-	script(src="/javascripts/dynatables/jquery.dynatable.js")
 	// ol3-ext 
 	script(src="/javascripts/ol3-ext/interaction/drawregularinteraction.js")
 	script(src="/javascripts/ol3-ext/control/profilcontrol.js")
@@ -94,6 +112,10 @@ block script
 	script(src="/javascripts/ol3-ext/style/fontsymbol.js")
 	script(src="/javascripts/ol3-ext/style/fontawesome.def.js")
 	script(src="/javascripts/ol3-ext/control/layerswitchercontrol.js")
+	script(src="/javascripts/ol3-ext/featureanimation/featureanimation.js")
+	script(src="/javascripts/ol3-ext/featureanimation/zoomanimation.js")
+	script(src="/javascripts/ol3-ext/utils/jspdf.min.js")
+	script(src="/javascripts/ol3-ext/utils/jqExportMap.js")
 	//proj4js
 	script(src="/javascripts/proj4js/dist/proj4.js")
 	// ol-utils
@@ -110,3 +132,17 @@ block script
 	//script(src="/javascripts/ol-utils/map.js")
 	//script(src="/javascripts/ol-utils/bar.js")
 	//script(src="/javascripts/ol-utils/controls/perfil.js")
+	script.
+		$('#logout').click(function(e){
+			console.log('logout');
+			e.preventDefault();
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET', '/usuarios/logout', true);
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState == 4 && xhr.status >= 200 && xhr.status < 400)
+					window.location.replace('/');
+				else if (xhr.readyState == 4)
+					Materialize.toast('Error al cerrar sesión');
+			}
+			xhr.send();
+		});

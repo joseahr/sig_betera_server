@@ -84,15 +84,36 @@ function PerfilControl(mapController){
     });
 
     // Estilo del lineString
-    var styleLineStringZ = [	
-        new ol.style.Style({	
-            stroke: new ol.style.Stroke({	
-                color: [0,0,0],
-                width: 3,
-                lineDash: [.5, 10]
+    var perfilLineStyle = new ol.style.Style({	
+        stroke: new ol.style.Stroke({	
+            color: [48, 63, 159],
+            width: 3,
+            lineDash: [.5, 10]
+        })
+    });
+
+    var perfilPointStyle = new ol.style.Style({	
+        image: new ol.style.Circle({
+            radius: 5,
+            stroke: new ol.style.Stroke({
+                color: '#000'
             })
         })
-    ];
+    });
+
+    var perfilStyle = {
+        'Point' : perfilPointStyle,
+        'LineString' : perfilLineStyle
+    }
+
+    var perfilStyleFunction = function(feature, resolution){
+        return perfilStyle[
+            (feature.getGeometry 
+                ? feature.getGeometry() 
+                : { getType : function(){ return 'LineString' } }
+            ).getType()
+        ];
+    }
 
     var stylePointPerfil = [
         new ol.style.Style({
@@ -117,10 +138,10 @@ function PerfilControl(mapController){
             }),
             stroke: new ol.style.Stroke(
             {	width: 2,
-                color: '#f80'
+                color: [48, 63, 159]
             }),
             fill: new ol.style.Fill(
-            {	color: [255, 136, 0, 0.6]
+            {	color: [48, 63, 159, 0.5]
             })
         })
     ];
@@ -131,7 +152,8 @@ function PerfilControl(mapController){
         html: '<i class="material-icons">terrain</i>',
         interaction : new ol.interaction.Draw({	
             type: 'LineString',
-            source: vectorDibujarPerfil.getSource()
+            source: vectorDibujarPerfil.getSource(),
+            style : perfilStyleFunction
         }),
         onToggle : function(){
             vectorProfile.getSource().clear();
@@ -171,7 +193,7 @@ function PerfilControl(mapController){
 
     var vectorProfile = new ol.layer.Vector({	
         source: sourceProfile,
-        style: styleLineStringZ,
+        style: perfilStyleFunction,
         displayInLayerSwitcher : false,
         allwaysOnTop : true,
         name : 'Perfil LineStringZ'
@@ -369,7 +391,7 @@ function PerfilControl(mapController){
             }
         });
         // Añadimos la feature - Se dispara evente soureceProfile.once('change');
-        feature.setStyle(styleLineStringZ);
+        feature.setStyle(perfilStyleFunction);
         sourceProfile.addFeature(feature);
 
         // Nos aseguramos de que solo se disparé un evento resize

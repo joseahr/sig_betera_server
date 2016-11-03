@@ -5,6 +5,8 @@ const sql = require('../sql').users;
 const bluebird = require('bluebird');
 const bcrypt = require('bcrypt-nodejs');
 const compare = bluebird.promisify(bcrypt.compare);
+const hash = bluebird.promisify(bcrypt.hash);
+const genSalt = bluebird.promisify(bcrypt.genSalt);
 
 module.exports = (rep, pgp) => {
 
@@ -14,12 +16,19 @@ module.exports = (rep, pgp) => {
      */
 
     return {
-        
+
+        deleteForgetToken : id_user =>
+            rep.none("DELETE FROM users_change_password_token WHERE id = '${id_user#}'", {id_user}),
+
+        createForgetToken : id_user =>
+            rep.one(sql.createForgetToken, {id_user}),
+
         findIdByToken : token =>
             rep.oneOrNone(sql.findIdByToken, { token : pgp.as.value(token) } ),
         
-        idValid : id => 
-            rep.one(sql.isValid, { id_user : pgp.as.value(id) } ),
+        isValid : id => 
+            rep.one(sql.isValid, { id_user : pgp.as.value(id) } )
+            .then(isValid => isValid.valid),
 
         getAllGroups : ()=>
             rep.one(sql.getAllGroups)
@@ -27,6 +36,9 @@ module.exports = (rep, pgp) => {
 
         validPassword: (user, password) =>
             compare(password, user.password),
+        
+        genPassword : password =>
+            hash(password, null, null),
 
         findBy: (column, value) =>
             rep.any(sql.findBy, {

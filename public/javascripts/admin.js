@@ -1,6 +1,115 @@
 setDataTable('table');
 
-if(!mobileAndTabletcheck()) $('.seccion').css('left', '300px');
+if(!mobileAndTabletcheck()){
+    $('.seccion').css('left', '300px');
+}
+else {
+    $('ul#slide-out').css('transform', 'translateX(-100%)');
+    $('.seccion').css('left', '0px')
+}
+
+
+
+$('body').on('click', '.create-layer-btn', function(e){
+    $('#new-layer').openModal();
+});
+
+$('body').on('click', '.create-baselayer-btn', function(e){
+    $('#new-baselayer').openModal();
+});
+
+
+$('#upload-baselayer-form').submit(function(e){
+    e.preventDefault();
+    var xhr = new XMLHttpRequest();
+    var self = this;
+    $(this).find('button').attr('disabled', 'disabled');
+    xhr.open('POST', '/admin/baselayers', true);
+    xhr.setRequestHeader("Content-type", "application/json");
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4){
+            $(self).find('button').attr('disabled', null);
+            if(xhr.status >= 200 && xhr.status < 400){
+
+                Materialize.toast('Servicio creado correctamente', 2500);
+            } else {
+                Materialize.toast('Error creando servicio : ' + xhr.responseText, 2500);
+            }
+        }
+    }
+    
+    var selectedLayers = [];
+    $('#select-capas-wms').find('option:selected').each(function(i){
+        if($(this).val()) selectedLayers.push($(this).val());
+    });
+    console.log(selectedLayers);
+
+    xhr.send(JSON.stringify({ 'service_url' : $('#url_servicio').val(), 'layers' : selectedLayers }));
+
+});
+
+$('#get-layers-wms-form').submit(function(e){
+    e.preventDefault();
+    var xhr = new XMLHttpRequest();
+    var self = this;
+    $(this).find('button').attr('disabled', 'disabled');
+    xhr.open('POST', '/usuarios/capas/wms/getCapabilities', true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4){
+            $(self).find('button').attr('disabled', null);
+            if(xhr.status >= 200 && xhr.status < 400){
+                var layers = JSON.parse(xhr.responseText);
+                console.log(layers);
+                console.log($('#upload-baselayer-form').find('select'));
+                $('#upload-baselayer-form').find('select')
+                    .empty()
+                    .append( $('<option>').attr('value', '').attr('disabled', '').attr('selected', '').html('Elige capas a añadir') ).material_select();
+                layers.forEach(function(l){
+                    $('#upload-baselayer-form').find('select').append( $('<option>').attr('value', l['Name']).html(l['Name']) ).material_select();
+                });
+                $('#upload-baselayer-form').find('button').attr('disabled', null);
+                Materialize.toast('Capas obtenidas correctamente', 2500);
+            } else {
+                $('#upload-baselayer-form').find('select').empty().material_select();
+                $('#upload-baselayer-form').find('button').attr('disabled', '');
+                Materialize.toast('Error obteniendo capas : ' + xhr.responseText, 2500);
+            }
+        }
+    }
+    console.log($('#url_servicio').val());
+    xhr.send('service_url=' + encodeURIComponent($('#url_servicio').val()));
+});
+
+$('#upload-layer-form').submit(function(e){
+    e.preventDefault();
+    var selectedFiles = $(this).find('[type="file"]').get(0).files;
+    var xhr = new XMLHttpRequest();
+    var self = this;
+    $(this).find('button').attr('disabled', 'disabled');
+    xhr.open('POST', '/admin/layers?layerName=' + $('#nombre_capa').val(), true);
+
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4){
+            $(self).find('input').val('');
+            $(self).find('button').attr('disabled', null);
+            if(xhr.status >= 200 && xhr.status < 400){
+                Materialize.toast('SHP subido correctamente', 2500);
+            } else {
+                Materialize.toast('Error subiendo SHP : ' + xhr.responseText, 2500);
+            }
+        }
+    }
+    var fd = new FormData();
+    for(var i = 0; i < selectedFiles.length; i++){
+        var f = selectedFiles[i];
+        fd.append('shps[]', f, f.name);
+    }
+
+    xhr.send(fd);
+});
+
+
 
 $('.user-detail-btn').click(function(e){
     var userId = +$(this).parent().attr('user-id');
@@ -32,20 +141,19 @@ $('.user-detail-btn').click(function(e){
     });
 
     (user.maps || []).forEach(function(mapa){
-        var capas = $('<table class="display highlight user-layer-table" cellspacing="0" width="100%"><thead><tr><th>Nombre de la capa</th><th>Rol del usuario</th><th class="no-sort"><i class="material-icons green-text" style="cursor : pointer;">edit_circle</i></th></tr></thead><tbody></tbody></table>');
-        (mapa.layers || []).forEach(function(capa){
-            var rol = (capa.rol || 'r');
+        appendUserMapsDetail(list.get(0), user, mapa);
+    });
 
-            capas.find('tbody').append(
-                '<tr><td>' + capa.name + '</td><td>' + rol + '</td><td><i rol="' + rol + '" user-id="' + userId + '" layer-id="' + (capa.id || capa.id_layer) + '" class="edit-user-layer-role-btn material-icons green-text" style="cursor : pointer;">edit_circle</i></td></tr>'
-            )
-        });
-        //console.log(mapa);
-        appendUserMapsDetail(list.get(0), user, mapa, capas);
+    var capas = $('<table class="display highlight user-layer-table" cellspacing="0" width="100%"><thead><tr><th>Nombre de la capa</th><th>Rol del usuario</th><th class="no-sort"><i class="material-icons green-text" style="cursor : pointer;">edit_circle</i></th></tr></thead><tbody></tbody></table>');
+    (user.layers_rol || []).forEach(function(capa){
+        var rol = (capa.rol || 'r');
+        capas.find('tbody').append(
+            '<tr><td>' + capa.name + '</td><td>' + rol + '</td><td><i rol="' + rol + '" user-id="' + userId + '" layer-id="' + (capa.id || capa.id_layer) + '" class="edit-user-layer-role-btn material-icons green-text" style="cursor : pointer;">edit_circle</i></td></tr>'
+        )
     });
 
     groups.append(groupSelect);
-    appendTabUserDetail(list.prop('outerHTML'), mna.prop('outerHTML'), groups.prop('outerHTML'));
+    appendTabUserDetail(list.prop('outerHTML'), mna.prop('outerHTML'), groups.prop('outerHTML'), capas.prop('outerHTML'));
 
     $('#select-group').on('change', function(e){
         var select = $(this);
@@ -180,7 +288,7 @@ $('body').on('click', '.add-map-btn', function(e){
     xhr.onreadystatechange = function(){
         if(xhr.readyState == 4){
             console.log(xhr.responseText);
-            if(xhr.status >= 200 && xhr.status < 300){
+            if(xhr.status >= 200 && xhr.status < 400){
                 Materialize.toast('Mapa asignado correctamente', 2000);
                 td.remove();
 
@@ -242,7 +350,7 @@ $('body').on('click', '.remove-map-btn', function(e){
     xhr.onreadystatechange = function(){
         if(xhr.readyState == 4){
             console.log(xhr.responseText);
-            if(xhr.status >= 200 && xhr.status < 300){
+            if(xhr.status >= 200 && xhr.status < 400){
                 Materialize.toast('Mapa eliminado al usuario correctamente', 2000);
                 div.remove();
                 
@@ -360,7 +468,7 @@ function changeUserLayerRole(user, layerId, rol){
 }
 
 
-function appendTabUserDetail(assigned, notAssigned, groups){
+function appendTabUserDetail(assigned, notAssigned, groups, permisos){
     $('#user-detail .modal-content')
     .append(
         '<div class="row">'+
@@ -369,16 +477,18 @@ function appendTabUserDetail(assigned, notAssigned, groups){
                     '<li class="tab col s6"><a class="active" href="#mapas-usuario">Mapas</a></li>'+
                     '<li class="tab col s6"><a href="#assign-mapas">Asignar Mapas</a></li>'+
                     '<li class="tab col s6"><a href="#grupos">Grupos</a></li>'+
+                    '<li class="tab col s6"><a href="#permisos">Permisos</a></li>'+
                 '</ul>'+
             '</div>'+
             '<div id="mapas-usuario" class="col s12">' + assigned + '</div>'+
             '<div id="assign-mapas" class="col s12">' + notAssigned + '</div>'+
             '<div id="grupos" class="col s12">' + groups + '</div>'+
+            '<div id="permisos" class="col s12">' + permisos + '</div>'+
         '</div>'
     );
 }
 
-function appendUserMapsDetail(selector, user, mapa, capas){
+function appendUserMapsDetail(selector, user, mapa){
     $(selector).append(
         '<li>' + 
             '<div class="collapsible-header">' + 
@@ -389,7 +499,6 @@ function appendUserMapsDetail(selector, user, mapa, capas){
                 '</i>' 
                 + mapa.name + 
             '</div>' +
-            '<div class="collapsible-body" style="margin : 15px;"><p>' + capas.prop('outerHTML') + '</p></div>' +
         '</li>'
     );
 }
@@ -481,7 +590,7 @@ $('body').on('click', '.delete-map-btn', function(e){
     xhr.onreadystatechange = function(){
         if(xhr.readyState == 4){
             console.log(xhr.responseText);
-            if(xhr.status >= 200 && xhr.status < 300){
+            if(xhr.status >= 200 && xhr.status < 400){
                 row.remove();
                 // TODO --> Eliminar mapa de todos los usuarios
                 deleteUsersMap(mapId);
@@ -516,7 +625,7 @@ $('body').on('click', '.delete-map-default-btn', function(e){
     xhr.onreadystatechange = function(){
         if(xhr.readyState == 4){
             console.log(xhr.responseText);
-            if(xhr.status >= 200 && xhr.status < 300){
+            if(xhr.status >= 200 && xhr.status < 400){
                 row.remove();
                 allDefaultMaps.forEach(function(m, index){
                     if(m.id == mapId){
@@ -558,7 +667,7 @@ $('#new-map-form').submit(function(e){
     xhr.onreadystatechange = function(){
         if(xhr.readyState == 4){
             console.log(xhr.responseText);
-            if(xhr.status >= 200 && xhr.status < 300){
+            if(xhr.status >= 200 && xhr.status < 400){
                 var map_ = JSON.parse(xhr.responseText)[0];
                 addMap(map_);
                 $('#new-map-default').find('select').append(
@@ -584,7 +693,7 @@ $('#new-map-default').find('select').change(function(){
     xhr.onreadystatechange = function(){
         if(xhr.readyState == 4){
             console.log(xhr.responseText);
-            if(xhr.status >= 200 && xhr.status < 300){
+            if(xhr.status >= 200 && xhr.status < 400){
                 addDefaultMap(mapId);
                 option.remove();
                 select.val("").material_select();
@@ -625,7 +734,7 @@ function addDefaultMap(mapId){
     var map = findMap(mapId);
     allDefaultMaps.push(map);
     var tr = $('<tr></tr>');
-    Object.keys(map).forEach(function(k){
+    ['id', 'name'].forEach(function(k){
         tr.append(
             '<td>' + map[k] + '</td>'
         );
@@ -705,7 +814,7 @@ $('body').on('click', '.edit-map-btn', function(e){
         } else {
             ul.append(
                 '<li class="collection-item avatar">' + 
-                    '<i class="material-icons circle green">layers</i>' + 
+                    '<i class="material-icons circle green lighten-3">layers</i>' + 
                     '<span class="title">BaseLayer : ' + l.id + '</span>' + 
                     '<p>url : ' + l.service_url + '</br>capas : ' + l.name + '</p>' +
                     '<a href="#!" class="secondary-content remove-map-layer-btn" map-id="' + mapId + '" layer-id="' + l.id + '" layer-type="base">' +
@@ -768,7 +877,7 @@ $('body').on('click', '.edit-map-btn', function(e){
         xhr.onreadystatechange = function(){
             if(xhr.readyState == 4){
                 console.log(xhr.responseText);
-                if(xhr.status >= 200 && xhr.status < 300){
+                if(xhr.status >= 200 && xhr.status < 400){
                     $('#edit-map').find('ul.map-layers').append(
                         '<li class="collection-item avatar">' + 
                             '<i class="material-icons circle green">layers</i>' + 
@@ -779,6 +888,7 @@ $('body').on('click', '.edit-map-btn', function(e){
                         '</li>'
                     );
                     selectedOpt.remove();
+                    if(!map.layers) map.layers = [];
                     map.layers.push(l.id);
                     select.val("").material_select();
 
@@ -800,7 +910,7 @@ $('body').on('click', '.edit-map-btn', function(e){
         xhr.onreadystatechange = function(){
             if(xhr.readyState == 4){
                 //console.log(xhr.responseText);
-                if(xhr.status >= 200 && xhr.status < 300){
+                if(xhr.status >= 200 && xhr.status < 400){
                     $('#edit-map').find('ul.map-layers').append(
                         '<li class="collection-item avatar">' + 
                             '<i class="material-icons circle green">layers</i>' + 
@@ -843,7 +953,7 @@ $('body').on('click', '.remove-map-layer-btn', function(e){
     xhr.onreadystatechange = function(){
         if(xhr.readyState == 4){
             console.log(xhr.responseText);
-            if(xhr.status >= 200 && xhr.status < 300){
+            if(xhr.status >= 200 && xhr.status < 400){
                 li.remove();
 
                 ( layerType == 'layer' ? map.layers : map.baselayers ).forEach(function(lid, index, arr){
@@ -891,7 +1001,7 @@ $('body').on('click', '#save-order', function(e){
     xhr.onreadystatechange = function(){
         if(xhr.readyState == 4){
             console.log(xhr.responseText);
-            if(xhr.status >= 200 && xhr.status < 300){
+            if(xhr.status >= 200 && xhr.status < 400){
                 Materialize.toast('Orden guardado correctamente', 2000);
             }
             btn.prop('disabled', false);
@@ -946,7 +1056,7 @@ $('#send-mail').click(function(e){
         }
     });
 
-    if(!titulo || !cuerpo || !emails.length) return Materialize.toast('Faltan parámetros');
+    if(!titulo || !cuerpo || !emails.length) return Materialize.toast('Faltan parámetros', 2000);
 
     btn.prop('disabled', false);
     $('#mail').append(
@@ -961,7 +1071,7 @@ $('#send-mail').click(function(e){
         if(xhr.readyState == 4){
             btn.prop('disabled', false);
             $('#send-mail-progress').remove();
-            if(xhr.status >= 200 && xhr.status < 300){
+            if(xhr.status >= 200 && xhr.status < 400){
                 $('#titulo-mail').val('');
                 $('#cuerpo-mail').val('');
 

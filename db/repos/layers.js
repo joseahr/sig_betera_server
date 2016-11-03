@@ -1,9 +1,39 @@
 'use strict';
-
+const spawn = require('bluebird').promisify(require('child_process').exec)
 const sql = require('../sql').layers;
 
 module.exports = (rep, pgp) => {
     return {
+        getFeaturesIntersecting : function(wkt, ...layers){
+            return rep.task( t=>
+                t.batch(
+                    layers.map( layerName => 
+                        this.getLayerSchema(layerName)
+                        .then( schema =>{
+                            // Obtenemos todas las columnas de la Tabla (schema)
+                            let geomColumn = schema.find( col=> col.type === 'USER-DEFINED' && col.udt === 'geometry' ).name;
+                            // Obtenemos la columna de Geometría (para ello nos fijamos en el udt_name)
+                            let properties = schema.filter( col => col.name !== geomColumn ).map(col => col.name).join();
+                            return rep.manyOrNone(
+                                sql.getFeaturesIntersecting
+                                , { wkt, geomColumn, properties, layerName }
+                            ) 
+                        })
+                    )
+                ).then(founds => founds.map( el => el[0] ))
+            )
+        },
+
+        exist : tableName =>
+            rep.one("SELECT EXISTS( SELECT 1 FROM information_schema.tables WHERE table_name = '${tableName#}' )", { tableName })
+            .then( result => result.exists ),
+
+        importSHP : (shpPath, tableName) =>{
+            //require('fs').readFile(`${shpPath}`, (err, file)=>console.log(err, file, 'guaa'));
+            console.log(`export PGPASSWORD=postgres && shp2pgsql -I -W "LATIN1" ${shpPath} "capas"."${tableName}" | psql -d betera-test -U postgres`);
+            return spawn(`export PGPASSWORD=postgres && shp2pgsql -I -s 25830 -W "LATIN1" ${shpPath} "capas"."${tableName}" | psql -d betera-test -U postgres`, { shell : true})
+        },
+
         createTable : ()=>
             rep.none(sql.create),
         

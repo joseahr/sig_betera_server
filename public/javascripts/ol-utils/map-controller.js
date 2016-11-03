@@ -4,19 +4,6 @@ function MapController(){
 
     // @layers : Almacena todos los ol.layer.Vector (capas) que añadimos
     this.layers = [];
-    // @capasQueTeniaVisibles : Almacena todos los ol.layer.Vector (capas) 
-    // que hay visibles cuando salimos del zoom aceptado para visualizar 
-    // ol.layer.Vector
-    this.capasQueTeniaVisibles = [];
-    // @layerVisibilityChanged : Controla si hemos forzado una capa a que 
-    // no se muestre debido a que el nivel de zoom es bajo
-    this.layerVisibilityChanged = false;
-    // @countLayersVisibilityChanged : Cuenta las capas que hemos forzado 
-    // a que no se muestren debido a que el nivel de zoom es bajo
-    this.countLayersVisibilityChanged = 0;
-    // @MIN_ZOOM_SHOW_LAYERS : Sirve para controlar a qué zoom 
-    // se permiten ver las capas editables
-    this.MIN_ZOOM_SHOW_LAYERS = 5;
 
     // http://stackoverflow.com/a/11381730/3866134
     this.mobileAndTabletcheck = function() {
@@ -53,7 +40,8 @@ function MapController(){
 	this.view = new ol.View({
   	    projection : this.projection,
   	    zoom 	     : 10,
-  	    center 	   : [718235.466608, 4385207.688928]
+  	    center 	   : [718235.466608, 4385207.688928],
+        maxZoom : 16
     });
 
     this.map = new ol.Map({
@@ -105,6 +93,7 @@ function MapController(){
     // Añadimos el control de LayerSwitcher
     this.map.addControl(new ol.control.LayerSwitcher({
         target : $('#layerSwitcher').get(0),
+        show_progress : true,
         /*extent : true,
         trash  : true,
         onextent : function(l){
@@ -143,12 +132,14 @@ MapController.prototype.request = function(method, url){
 }
 
 MapController.prototype.parsers = {
-    'geojson' : new ol.format.GeoJSON()
+    'geojson' : new ol.format.GeoJSON(),
+    'wkt'     : new ol.format.WKT()
 }
 
 // Función para añadir una capa recibida del server
 // como GeoJSON a un grupo de capas
 MapController.prototype.addLayer = function(capa, group){
+    console.log('capa', capa);
     var self = this;
     // console.log(capa.geomColumnType, 'capa');
     if(typeof capa === 'string'){
@@ -169,61 +160,17 @@ MapController.prototype.addLayer = function(capa, group){
             default : return 'Point';
         }
     }
-    // @ol.layer.Vector que almacenará las features de la capa
-    var vector = new ol.layer.Vector({
-        name : capa.layerName,
-        geomColumnType : getGeometry(layerType),
-        rol  : capa.rol,
-        visible : false,
-        opacity : 0,
-        //displayInLayerSwitcher : false,
-        strategy : ol.loadingstrategy.bbox,
-        source : new ol.source.Vector({
-            // Ponerlo en false para obtener FeatureCollection en 
-            // la interacción Modify. Con esto puesto en true, el 
-            // método source.getFeaturesCollection() devolverá null
-            // Esto implica un menor rendimiento con un número grande de features
-            //useSpatialIndex : false,
-            features : this.parsers['geojson'].readFeatures(capa.layer)
-        })
+    // Añadimos la capa a la lista de capas
+    var wms = Tile({ 
+        service_url : 'http://www.sig.betera.es:8080/geoserver/betera/wms', 
+        layers : capa.layerName.name, 
+        name : capa.layerName.name,
+        crossOrigin : 'anonymous'  
     });
 
-    // Le damos un listener a la capa, para cuando cambie su
-    // visibilidad
-    vector.on('change:visible', function(e){
-        // La capa ha sido forzada a que no se visulize
-        if(self.layerVisibilityChanged){
-            // cambiamos el estado de la variable a false
-            self.layerVisibilityChanged = false;
-            // Si el número de veces que se ha disparado este evento coincide con 
-            // el tamaño de la lista de capasQueTeniaVisibles mostramos un mensaje informativo
-            // de que no puedes visualizar las capas a un zoom tan bajo
-            if (self.countLayersVisibilityChanged >= self.capasQueTeniaVisibles.length && self.capasQueTeniaVisibles.length){
-                // Modificamos la variable @countLayersVisibilityChanged a 0
-                self.countLayersVisibilityChanged = 0;
-            }
-            // No seguimos
-            return;
-        }
-
-        // La capa no ha sido forzada a que no se visualice
-        // ha sido el usuario dándole click al checkbox del LayerSwitcher
-        // Si el zoom es menor que @MIN_ZOOM_SHOW_LAYERS
-        if(this.getVisible && self.map.getView().getZoom() < self.MIN_ZOOM_SHOW_LAYERS){
-            // Ponemos @layerVisibilityChanged a true para decir que hemos forzado
-            // a ocultar la capa
-            self.layerVisibilityChanged = true;
-            // La ocultamos
-            this.setVisible(false);
-            // Decimos que a este zoom no se puede mostrar la capa
-            Materialize.toast('Zoom demasiado bajo para ver la capa', 1000);
-        }
-    }); // Fin vector.on(...)
-    
-    // Añadimos la capa a la lista de capas
-    self.layers.push(vector);
+    self.layers.push(wms);
     // Añadimos la capa al grupo
-    group.getLayers().extend([vector]);
+    group.getLayers().extend([wms]);
 
     // Movemos ciertas capas arriba del todo 
     // estas capas son las que se usan en las herramientas de
@@ -253,17 +200,21 @@ MapController.prototype.loadMaps = function(){
         // Recorremos la lista de mapas con reduce
         //console.log(listOfMaps, 'lisst');
         return Bluebird.all(
-            listOfMaps.map(function(mapa){
+            listOfMaps.map(function(mapa, index, arr){
                 // Creamos un grupo de capas
                 // que contendrá todas las capas del mapa
                 //console.log('mapa'. mapa);
-                var capas = [];
                 console.log(mapa);
+                var capas = [];
                 var orden = mapa.orden;
                 var groupCapasMap = new ol.layer.Group({
                     name: mapa.mapName,
-                    format : new ol.format.GeoJSON(),
-                    visible : true
+                    mapa : true,
+                    visible : mapa.visible === true 
+                        ? true
+                        : mapa.visible === false 
+                        ? false 
+                        : ( index == arr.length - 1)
                 });
                 // Añadimos el grupo al mapa
                 self.map.addLayer(groupCapasMap);
@@ -280,7 +231,7 @@ MapController.prototype.loadMaps = function(){
                             // Llamamos a la función addCapa()
                             //self.addLayer(capa, groupCapasMap);
                             var obj = {
-                                id : mlId, type : 'layer', layer : capa
+                                id : mlId, type : 'layer', rol : capa.rol, layerName : capa.layerName
                             };
                             capas.push(obj);
                         })
@@ -296,12 +247,16 @@ MapController.prototype.loadMaps = function(){
                         (mapa.mapbaselayerIds || []).map(function(mblId){
                             return self.request('GET', '/usuarios/capas/base/' + mblId)
                             .then(function(capa){
+                                console.log('base', capa);
                                 // Obtenemos la capa en formato GeoJSON
                                 // Llamamos a la función addCapa()
                                 //self.addLayer(capa, groupCapasMap);
                                 //console.log(capa, 'baseLayer');
                                 var obj = {
-                                    id : mblId, type : 'base', layer : capa
+                                    id : mblId, 
+                                    type : 'base', 
+                                    name : capa.name,
+                                    service_url : capa.service_url
                                 };
                                 capas.push(obj);
                             })
@@ -323,7 +278,6 @@ MapController.prototype.loadMaps = function(){
                     .reverse()
                     .forEach(function(capa){
                         var type = capa.type;
-                        capa = capa.layer;
                         if(type == 'layer'){
                             self.addLayer(capa, groupCapasMap)
                         } else {
@@ -331,55 +285,20 @@ MapController.prototype.loadMaps = function(){
                                 Tile({
                                     name : capa.name,
                                     service_url : capa.service_url,
-                                    layers : capa.name
+                                    layers : capa.name,
+                                    gutter : 250,
+                                    wms_externo : true,
+                                    crossOrigin : ''  
                                 })
                             ]);
                         }
                     });
+
                     Materialize.toast('Mapa cargado : ' + mapa.mapName, 2500);
                 })
             })
         );
     }) // XHRPromise(...).then(...)
-    .then(function(){
-        // Cuando cambia el Zoom del mapa
-        self.map.getView().on('change:resolution', function(){
-            // Si el zoom es menor que @MIN_ZOOM_SHOW_LAYERS
-            if(self.map.getView().getZoom() < self.MIN_ZOOM_SHOW_LAYERS){
-                // Recorremos nuestras capas editables
-                self.layers.forEach(function(c, i){
-                    // Si alguna está visible
-                    if (c.getVisible()){
-                        // Añadimos esa capa a la lista @capasQueTeniaVisibles
-                        self.capasQueTeniaVisibles.push(c);
-                        // actualizamos el contador de capas forzadas a ocultarse
-                        self.countLayersVisibilityChanged++;
-                        // Función para que se ejecute en el siguiente
-                        // tick del event-loop
-                        var func = function(){
-                            // Ponemos a true la variable layerVisibilityChanged
-                            self.layerVisibilityChanged = true;
-                            // Pasamos a no visible la capa
-                            c.setVisible(false);
-                        }
-                        // Ejecutamos la función en el siguiente tick del event-loop
-                        setTimeout(func, 0);
-                    }
-                });
-            } else {
-                // El zoom es mayor o igual a @MIN_ZOOM_SHOW_LAYERS
-                // Recorremos la lista @capasQueTeniaVisibles
-                self.capasQueTeniaVisibles.forEach(function(c){
-                    // Ponemos a visible dichas capas
-                    c.setVisible(true);
-                });
-                // Modificamos la variable @capasQueTeniaVisibles
-                // a una lista vacía
-                //console.log('Modificar capasQueTeniaVisibles a []');
-                self.capasQueTeniaVisibles = [];
-            }
-        });
-    })
     .catch(function(err){
         // Ha habido un error
         Materialize.toast('Error cargando los mapas : ', 2500);

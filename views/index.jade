@@ -14,12 +14,88 @@ block header
 				.container
 					.nav-wrapper
 						a.brand-logo SIG Bétera
-						ul#nav-mobile.right.hide-on-med-and-down
+						ul.left.hide-on-large-only(style="padding-right : 10px;")
 							li
+								a#menu-mobile.button-collapse(href="#" data-activates="slide-out")
+									i.material-icons menu
+						ul.right
+							li.hide-on-med-and-down
 								a(href="/visor") Visor
-							li
-								a(href="#" class="new-user-btn") Registrarse
+							if !user
+								li.hide-on-med-and-down
+									a.new-user-btn(href='#') Registrarse
+								li.hide-on-med-and-down
+									a.forgot-password-btn(href='#') ¿Olvidaste Contraseña?
+							if user
+								li.hide-on-med-and-down
+									a.truncate
+										i.material-icons.left.white-text person
+										| #{user.name}
 block content
+	ul#slide-out.side-nav(style="z-index : 1000;")
+		li(style="background : url('http://www.betera.com/wp-content/uploads/policia-local-31.jpg'); background-size : 150%;")
+			.userView
+				a()
+					i.material-icons.prefix.circle.white-text.darken-2(style="font-size : 5em;") account_circle
+				if (user)
+					a()
+						span.black-text.name #{user.name}
+					a(href='#!email')
+						span.black-text.email #{user.email}
+				else
+					a()
+						span.black-text.name Usuario Invitado
+
+	#modal-forgot.modal.modal-fixed-footer
+		.modal-header
+			.card-panel.indigo.lighten-2.white-text(style="margin-top : 0px; height : 4em") ¿Olvidaste Contraseña?
+				i.material-icons.left vpn_key
+			.row(style="margin-bottom : 3.5em;")
+				form#forgot-form.col.s12(action="/usuarios/password", method = "POST" )
+					.row
+						p.indigo-text Escribe el e-mail asociado a tu cuenta
+						.input-field.col.s12
+							input#email-form.validate(placeholder='Escriba su e-mail', type='email' name="email" )
+							label(for='email-form') e-mail
+					.row
+						button#submit-forgot.col.s12.waves-effect.waves-light.waves-green.btn-large(type="submit" style="z-index : 0") Enviar
+							i.material-icons.right send
+		.modal-footer
+			a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cancelar
+	#modal-registro.modal.modal-fixed-footer
+		.modal-header
+			.card-panel.indigo.lighten-2.white-text(style="margin-top : 0px; height : 4em") Nuevo Usuario
+				i.material-icons.left person_add
+			.row(style="margin-bottom : 3.5em;")
+				form#registro-form.col.s12(action="/usuarios/signup", method = "POST" )
+					.row
+						p.indigo-text Datos personales
+						.input-field.col.s12.m6
+							input#nombre-form.validate(placeholder='Escriba su nombre', type='text' name="nombre" )
+							label(for='nombre-form') Nombre
+						.input-field.col.s12.m6
+							input#apellidos-form.validate(placeholder='Escriba sus apellidos', type='text' name="apellidos" )
+							label(for='apellidos-form') Apellidos
+					.row
+						p.indigo-text Datos de usuario
+						.input-field.col.s12.m6
+							input#email-form.validate(placeholder='Escriba su e-mail', type='email' name="email" )
+							label(for='email-form') e-mail
+						.input-field.col.s12.m6
+							input#name.validate(placeholder='Escriba su nombre de usuario', type='text' name="name" )
+							label(for='name-form') Nombre de usuario
+					.row
+						.input-field.col.s12.m6
+							input#nombre.validate(placeholder='Escriba su clave', type='password' name="password" )
+							label(for='password-form') Clave de acceso
+						.input-field.col.s12.m6
+							input#repassword.validate(placeholder='Repita clave de acceso', type='password' name="repassword" )
+							label(for='repassword-form') Repetir clave de acceso
+					.row
+						button#submit-signup.col.s12.waves-effect.waves-light.waves-green.btn-large(type="submit" style="z-index : 0") Registrarse
+							i.material-icons.right send
+		.modal-footer
+			a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cancelar
 	.parallax-container
 		.parallax
 			img(src="/images/betera-fondo-1.jpg" style="display : block; transform: translate3d(-60%, 0px, 0px);")
@@ -28,45 +104,76 @@ block content
 			.col.s6.valign(style="height : 100px; background-image : url('/images/betera-logo.png'); background-size : contain; background-repeat : no-repeat;background-position : 50%;")
 			.col.s6.valign
 				h2.center-align.blue-text.lighten-3 SIG Bétera
-		.row.container.blue.lighten-3
-			.col.s12.m12.l6
-				.card-panel.indigo.darken-3
-					p.flow-text.center-align.white-text.darken-3 Visualizador Público
-				.row.card-panel.hoverable.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em; padding : 10px;")
-					.col.s12.valign-wrapper(style="height : 150px;")
-						p.center-align.indigo-text.lighten-3.valign
-							|  Los mapas públicos accesibles para todos los ciudadanos y empresas son entre otros : Callejero, Histórico de ortofotografías, Urbanismo, ...
-				.center-align(style="margin-top : 1em; margin-bottom : 1em; margin-right : 0.75em; margin-left : 0.75em;")
-					a.waves-effect.waves-light.btn(style="margin : 0px auto" href="/visor")
-						i.material-icons.right call_made
-						| Acceder
-			.col.s12.m12.l6
-				.card-panel.indigo.darken-3
-					p.flow-text.center-align.white-text.darken-3 Visualizador Restringido
-				.row.card-panel.hoverable.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em; padding : 10px;")
-					form#login.col.s12.valign-wrapper(style="height : 150px;")
-						.row.valign(style="margin : 0px auto;")
-							.input-field.col.s12.m6
-								i.material-icons.prefix account_circle
-								input.validate#icon_prefix(type='text' name="username_email")
-								label.truncate(for='icon-prefix') Email o Usuario
-							.input-field.col.s12.m6
-								i.material-icons.prefix vpn_key
-								input.validate#icon_prefix(type='password' name='password')
-								label.truncate(for='icon-prefix') Contraseña
-				.center-align(style="margin-top : 1em; margin-bottom : 1em; margin-right : 0.75em; margin-left : 0.75em;")
-					a#submit-login.waves-effect.waves-light.btn(style="margin : 0px auto")
-						i.material-icons.right send
-						| Iniciar Sesión
+		if user
+			.row.container.blue.lighten-3
+				.col.s12.m12.l6
+					.card-panel.indigo.darken-3
+						p.flow-text.center-align.white-text.darken-3 Usuario #{user.name}
+					.row.card-panel.hoverable.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em; padding : 10px;")
+						.col.s12.valign-wrapper(style="height : 150px;")
+							p.center-align.indigo-text.lighten-3.valign
+								|  BLABLABLABLABL
+					.center-align(style="margin-top : 1em; margin-bottom : 1em; margin-right : 0.75em; margin-left : 0.75em;")
+						a.waves-effect.waves-light.btn(style="margin : 0px auto" href="/visor")
+							i.material-icons.right call_made
+							| Acceder
+				.col.s12.m12.l6
+					.card-panel.indigo.darken-3
+						p.flow-text.center-align.white-text.darken-3 Usuario #{user.name}
+					.row.card-panel.hoverable.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em; padding : 10px;")
+						.col.s12.valign-wrapper(style="height : 150px;")
+							p.center-align.indigo-text.lighten-3.valign
+								|  BLABLABLABLABL
+					.center-align(style="margin-top : 1em; margin-bottom : 1em; margin-right : 0.75em; margin-left : 0.75em;")
+						a.waves-effect.waves-light.btn(style="margin : 0px auto" href="/visor")
+							i.material-icons.right call_made
+							| Acceder
+		else
+			.row.container.blue.lighten-3
+				.col.s12.m12.l6
+					.card-panel.indigo.darken-3
+						p.flow-text.center-align.white-text.darken-3 Visualizador Público
+					.row.card-panel.hoverable.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em; padding : 10px;")
+						.col.s12.valign-wrapper(style="height : 150px;")
+							p.center-align.indigo-text.lighten-3.valign
+								|  Los mapas públicos accesibles para todos los ciudadanos y empresas son entre otros : Callejero, Histórico de ortofotografías, Urbanismo, ...
+					.center-align(style="margin-top : 1em; margin-bottom : 1em; margin-right : 0.75em; margin-left : 0.75em;")
+						a.waves-effect.waves-light.btn(style="margin : 0px auto" href="/visor")
+							i.material-icons.right call_made
+							| Acceder
+				.col.s12.m12.l6
+					.card-panel.indigo.darken-3
+						p.flow-text.center-align.white-text.darken-3 Visualizador Restringido
+					.row.card-panel.hoverable.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em; padding : 10px;")
+						form#login.col.s12.valign-wrapper(style="height : 150px;")
+							.row.valign(style="margin : 0px auto;")
+								.input-field.col.s12.m6
+									i.material-icons.prefix account_circle
+									input.validate#icon_prefix(type='text' name="username_email")
+									label.truncate(for='icon-prefix') Email o Usuario
+								.input-field.col.s12.m6
+									i.material-icons.prefix vpn_key
+									input.validate#icon_prefix(type='password' name='password')
+									label.truncate(for='icon-prefix') Contraseña
+					.center-align(style="margin-top : 1em; margin-bottom : 1em; margin-right : 0.75em; margin-left : 0.75em;")
+						a#submit-login.waves-effect.waves-light.btn(style="margin : 0px auto")
+							i.material-icons.right send
+							| Iniciar Sesión
 	.parallax-container
 		.parallax
 			img(src="/images/betera-fondo-2.jpg" style="display : block; transform: translate3d(-50%, 385px, 0px);")
+
+
 block script
 	// jQuery
 	script(src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous")
 	// MaterializeCSS (Google)
 	script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js")
 	script.
+		$('input').val('');
+		$('form').trigger('reset');
+		$('.button-collapse').sideNav();
+
 		function setParallaxHeight(e){$('.parallax-container').css('height', $(window).innerHeight() / 2);}
 		setParallaxHeight();
 		$(window).on('resize', setParallaxHeight);
@@ -76,7 +183,19 @@ block script
 
 		$('#login').submit(onSubmitLogin);
 
+		$('#modal-forgot').submit(onSubmitForgot);
+
 		$('#submit-login').bind('click', function(){ $('#login').submit(); })
+
+		$('.new-user-btn').click(function(e){
+			e.preventDefault();
+			$('#modal-registro').openModal();
+		});
+
+		$('.forgot-password-btn').click(function(e){
+			e.preventDefault();
+			$('#modal-forgot').openModal();
+		});
 
 		function onEnterKeyLoginForm(e){
 			if(e.which == 13){
@@ -84,8 +203,32 @@ block script
 			}
 		}
 
+		function onSubmitForgot(e){
+			e.preventDefault();
+			$('#submit-forgot').attr('disabled', 'disabled');
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', '/usuarios/password', false);
+			xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState === 4){
+					$('#submit-forgot').attr('disabled', null);
+					if(xhr.status < 400){
+						Materialize.toast('Se ha enviado un e-mail con las intrucciones a : ' + $('#modal-forgot').find('[name = "email"]').val(), 2500);
+						$('#modal-forgot').find('[name = "email"]').val('');
+						$('#modal-forgot').closeModal();
+					}
+					else {
+						Materialize.toast('Error : ' + xhr.responseText, 3500);
+					}
+				}
+			}
+
+			xhr.send($.param([
+				{ name : 'email', value : $('#modal-forgot').find('[name = "email"]').val() }
+			]));
+		}
+
 		function onSubmitLogin(e){
-			console.log('form submit');
 			e.preventDefault();
 			$('#submit-login').attr('disabled', 'disabled');
 			var xhr = new XMLHttpRequest();
@@ -98,7 +241,7 @@ block script
 						window.location.href = '/visor';
 					}
 					else {
-						Materialize.toast('Error de autenticación', 2500);
+						Materialize.toast('Error de autenticación : ' + xhr.responseText, 3500);
 					}
 				}
 			}
@@ -109,7 +252,25 @@ block script
 			]));
 		}
 
-		$('.new-user-btn').click(function(e){
+		$('#registro-form').submit(onSubmitSignup);
+		function onSubmitSignup(e){
 			e.preventDefault();
+			$('#submit-signup').attr('disabled', 'disabled');
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', '/usuarios/signup', false);
+			xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState === 4){
+					$('#submit-signup').attr('disabled', null);
+					if(xhr.status < 400){
+						$('#modal-registro').closeModal();
+						Materialize.toast('¡Usuario creado con éxito, revisa tu correo para finalizar el registro!', 2500);
+					}
+					else {
+						Materialize.toast('Error creando usuario : ' + xhr.responseText, 2500);
+					}
+				}
+			}
 
-		});
+			xhr.send( $(this).serialize() );
+		}
