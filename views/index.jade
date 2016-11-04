@@ -1,6 +1,8 @@
 extends layout
 
 block link
+	// AnimateCSS
+	link(rel="stylesheet" href="/stylesheets/animate.min.css")
 	// MaterializeCSS
 	link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css")
 	// Materialize Icons
@@ -10,10 +12,12 @@ block link
 block header
 	head
 		.navbar-fixed
-			nav.indigo.darken-3
+			nav.blue.darken-3
 				.container
 					.nav-wrapper
-						a.brand-logo SIG Bétera
+						h4.brand-logo(style="margin-left : 10px;") SIG Bétera
+						a.left
+							img(src="/images/betera-logo.png" style="max-height : 60px;")
 						ul.left.hide-on-large-only(style="padding-right : 10px;")
 							li
 								a#menu-mobile.button-collapse(href="#" data-activates="slide-out")
@@ -98,7 +102,7 @@ block content
 			a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cancelar
 	.parallax-container
 		.parallax
-			img(src="/images/betera-fondo-1.jpg" style="display : block; transform: translate3d(-60%, 0px, 0px);")
+			img(src="/images/betera-fondo-1.jpg" style="display : block; transform: translate3d(-60%, 0px, 0px); opacity : 0.7; ")
 	.section.white
 		.row.container.valign-wrapper
 			.col.s6.valign(style="height : 100px; background-image : url('/images/betera-logo.png'); background-size : contain; background-repeat : no-repeat;background-position : 50%;")
@@ -106,28 +110,14 @@ block content
 				h2.center-align.blue-text.lighten-3 SIG Bétera
 		if user
 			.row.container.blue.lighten-3
-				.col.s12.m12.l6
-					.card-panel.indigo.darken-3
-						p.flow-text.center-align.white-text.darken-3 Usuario #{user.name}
-					.row.card-panel.hoverable.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em; padding : 10px;")
-						.col.s12.valign-wrapper(style="height : 150px;")
-							p.center-align.indigo-text.lighten-3.valign
-								|  BLABLABLABLABL
-					.center-align(style="margin-top : 1em; margin-bottom : 1em; margin-right : 0.75em; margin-left : 0.75em;")
-						a.waves-effect.waves-light.btn(style="margin : 0px auto" href="/visor")
-							i.material-icons.right call_made
-							| Acceder
-				.col.s12.m12.l6
-					.card-panel.indigo.darken-3
-						p.flow-text.center-align.white-text.darken-3 Usuario #{user.name}
-					.row.card-panel.hoverable.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em; padding : 10px;")
-						.col.s12.valign-wrapper(style="height : 150px;")
-							p.center-align.indigo-text.lighten-3.valign
-								|  BLABLABLABLABL
-					.center-align(style="margin-top : 1em; margin-bottom : 1em; margin-right : 0.75em; margin-left : 0.75em;")
-						a.waves-effect.waves-light.btn(style="margin : 0px auto" href="/visor")
-							i.material-icons.right call_made
-							| Acceder
+				.slider.object-non-visible(data-animation-effect="bounceInLeft")
+					ul.slides
+						li
+							img(src='http://lorempixel.com/580/250/nature/1')
+							// random image
+							.caption.center-align
+								h3 This is our big Tagline!
+								h5.light.grey-text.text-lighten-3 Here's our small slogan.
 		else
 			.row.container.blue.lighten-3
 				.col.s12.m12.l6
@@ -160,13 +150,52 @@ block content
 							i.material-icons.right send
 							| Iniciar Sesión
 	.parallax-container
+		.parallax.valign-wrapper
+			img(src="/images/betera-fondo-2.jpg" style="display : block; transform: translate3d(-50%, 385px, 0px); z-index : -1; opacity : 0.7; ")
+			i.valign.material-icons.blue-text.lighten-1.object-non-visible(style="font-size : 20em; margin : 0px auto; " data-animation-effect="bounceInDown") cloud_download
+	.section.white
+		.row.container.blue.lighten-3
+			.slider
+				ul.slides
+					li
+						img(src='http://lorempixel.com/580/250/nature/1')
+						// random image
+						.caption.center-align
+							h3 This is our big Tagline!
+							h5.light.grey-text.text-lighten-3 Here's our small slogan.
+	.parallax-container
 		.parallax
-			img(src="/images/betera-fondo-2.jpg" style="display : block; transform: translate3d(-50%, 385px, 0px);")
-
-
+			img(src="/images/betera-fondo-3.jpg" style="display : block; transform: translate3d(-50%, 385px, 0px); opacity : 0.7; ")
+	footer.page-footer.blue.darken-3
+		.container
+			.row
+				.col.l6.s12
+					h5.white-text Footer Content
+					p.grey-text.text-lighten-4 You can use rows and columns here to organize your footer content.
+				.col.l4.offset-l2.s12
+					h5.white-text Links
+					ul
+						li
+							a.grey-text.text-lighten-3(href='http://www.betera.es' target="_blank") http://www.betera.es
+						li
+							a.grey-text.text-lighten-3(href='http://sig.betera.es/visor/noticias/Terminos_Condiciones.pdf' target="_blank") Términos y condiciones
+						li
+							a.grey-text.text-lighten-3(href='#!') Recomendaciones
+						li
+							a.grey-text.text-lighten-3(href='#!') Preguntas frecuentes
+		.footer-copyright
+			.container
+				| © 2016 Ayuntamiento de Bétera
+				a.grey-text.text-lighten-4.right() Visitas #
 block script
 	// jQuery
 	script(src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous")
+	// Modernizr
+	script(type='text/javascript', src='/javascripts/modernizr.js')
+	// Jquery appear
+	script(type='text/javascript', src='/javascripts/jquery.appear.js')
+	// Layout.js
+	script(type='text/javascript', src='/javascripts/layout.js')
 	// MaterializeCSS (Google)
 	script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js")
 	script.
@@ -178,6 +207,8 @@ block script
 		setParallaxHeight();
 		$(window).on('resize', setParallaxHeight);
 		$('.parallax').parallax();
+
+		$('.slider').slider();
 		
 		$('#login').keyup(onEnterKeyLoginForm);
 

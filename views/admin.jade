@@ -15,7 +15,7 @@ block link
 block header
     header
         .navbar-fixed
-            nav.indigo.darken-3
+            nav.blue.darken-3
                 .container
                     .nav-wrapper
                     a.brand-logo SIG Bétera
@@ -28,7 +28,8 @@ block header
                             a(href="/visor") Visor
 block content
     // Div visible Inicio
-    #inicio.seccion.visible_bet(style=" top : 64px; right : 0px; bottom : 0px; position : absolute; background : rgba(0,0,0,0.5)") Inicio
+    #inicio.seccion.visible_bet(style=" top : 64px; right : 0px; bottom : 0px; position : absolute;")
+        div(style="position : fixed; background : url('/images/betera-logo.png') no-repeat center; top:64px;bottom:0;left:300px;right:0; background-size: 50% 90%;")
     #usuarios.seccion(style=" top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;") Usuarios
         table#usuarios_table.display.highlight(cellspacing="0" width="100%")
             thead
@@ -89,11 +90,15 @@ block content
                 tr
                     each k in Object.keys(allLayers[0])
                         th #{k}
+                    th.no-sort
+                        i.material-icons(style="cursor : default; ") remove_circle_outline
             tbody
                 each capa in allLayers.sort(function(a, b){ return a.id > b.id})
                     tr
                         each k in Object.keys(allLayers[0])
                             td #{capa[k]}
+                        td
+                            i.red-text.delete-layer-btn.material-icons(layer-id="#{capa.id}" layer-name="#{capa.name}" style="cursor : pointer;") remove_circle_outline
         .card-panel.indigo.white-text Servicios WMS
             i.create-baselayer-btn.material-icons.white-text(style="float : right; cursor : pointer;") add_circle_outline
         table#capas_wms_table.display.highlight(cellspacing="0" width="100%")
@@ -101,11 +106,15 @@ block content
                 tr
                     each k in Object.keys(allBaseLayers[0])
                         th #{k}
+                    th.no-sort
+                        i.material-icons(style="cursor : default; ") remove_circle_outline
             tbody
                 each capa in allBaseLayers.sort(function(a, b){ return a.id > b.id})
                     tr
                         each k in Object.keys(allBaseLayers[0])
                             td #{capa[k]}
+                        td
+                            i.red-text.delete-baselayer-btn.material-icons(baselayer-id="#{capa.id}" style="cursor : pointer;") remove_circle_outline
     #mail.seccion(style=" top : 64px; right : 0px; bottom : 0px; position : absolute; visibility : hidden; margin : 15px;")
         .card-panel.col.s12.indigo.white-text Mensaje
         .col.s12
@@ -151,7 +160,7 @@ block content
                 a(href='#!email')
                     span.black-text.email #{user.email}
         li.bold.active
-            a(href='/') 
+            a(href='#inicio' data-href='#inicio') 
                 | Inicio
                 i.material-icons.indigo-text(style="float : right") home
         li

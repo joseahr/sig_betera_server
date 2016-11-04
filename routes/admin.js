@@ -334,7 +334,8 @@ router.route('/layers')
             }
 
             db.users.layers.importSHP(shpPath, tableName)
-            .then( ()=> res.status(200).json('OK'))
+            .then( ()=> db.one("SELECT * FROM Layers WHERE name = '${tableName#}'", { tableName }) )
+            .then( table => res.status(200).json(table))
             .catch( err => res.status(500).json(err))
             .finally( ()=> Multer.removeFiles(...req.files.map( f => f.path ) ) );
         })
@@ -343,7 +344,8 @@ router.route('/layers')
 })
 .delete( (req, res)=>{
     let tableName = req.body.tableName;
-    db.none("DROP TABLE IF EXISTS ${tableName^} CASCADE", { tableName })
+    console.log(req.body.tableName);
+    db.none('DROP TABLE IF EXISTS "capas".${tableName~} CASCADE', { tableName })
     .then( ()=> res.status(200).json('OK') )
     .catch(err => res.status(500).json(err) );  
 });
@@ -362,8 +364,9 @@ router.route('/baselayers')
         if( layers.some( l => !layerCapNames.find( lcn => lcn === l) ) ) 
             return res.status(500).json('El nombre de algunas capas seleccionadas no aparece en el doc de capacidades');
         // Actualizar bdd
-        db.none("INSERT INTO base_layers(service_url, name) VALUES('${service_url#}', '${layers#}')", { service_url : service_url.split('?')[0], layers : layers.join() })
-        .then( ()=> res.status(200).json('OK') )
+        db.one("INSERT INTO base_layers(service_url, name) VALUES('${service_url#}', '${layers#}') RETURNING *", 
+            { service_url : service_url.split('?')[0], layers : layers.join() })
+        .then( baseLayer => res.status(200).json(baseLayer) )
         .catch(err => res.status(500).json(err) );
     })
 })

@@ -9,7 +9,6 @@ else {
 }
 
 
-
 $('body').on('click', '.create-layer-btn', function(e){
     $('#new-layer').openModal();
 });
@@ -30,7 +29,11 @@ $('#upload-baselayer-form').submit(function(e){
         if(xhr.readyState == 4){
             $(self).find('button').attr('disabled', null);
             if(xhr.status >= 200 && xhr.status < 400){
-
+                var baseLayer = JSON.parse(xhr.responseText);
+                console.log(baseLayer, xhr.responseText);
+                allBaseLayers.push(baseLayer);
+                refreshCapasBase();
+                $('#new-baselayer').closeModal();
                 Materialize.toast('Servicio creado correctamente', 2500);
             } else {
                 Materialize.toast('Error creando servicio : ' + xhr.responseText, 2500);
@@ -46,6 +49,33 @@ $('#upload-baselayer-form').submit(function(e){
 
     xhr.send(JSON.stringify({ 'service_url' : $('#url_servicio').val(), 'layers' : selectedLayers }));
 
+});
+
+$('body').on('click', '.delete-baselayer-btn', function(e){
+    e.preventDefault();
+
+    var xhr = new XMLHttpRequest();
+    var self = this;
+    var layerId = $(this).attr('baselayer-id');
+    
+    xhr.open('DELETE', '/admin/baselayers', true);
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=utf-8');
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4){
+            $(self).find('input').val('');
+            $(self).find('button').attr('disabled', null);
+            if(xhr.status >= 200 && xhr.status < 400){
+                removeBaseLayer(layerId);
+                
+                refreshCapasBase();
+                Materialize.toast('Capa base eliminada correctamente', 2500);
+            } else {
+                Materialize.toast('Error al eliminar capa base : ' + xhr.responseText, 2500);
+            }
+        }
+    }
+
+    xhr.send( JSON.stringify({ id : layerId }) );
 });
 
 $('#get-layers-wms-form').submit(function(e){
@@ -94,6 +124,11 @@ $('#upload-layer-form').submit(function(e){
             $(self).find('input').val('');
             $(self).find('button').attr('disabled', null);
             if(xhr.status >= 200 && xhr.status < 400){
+                var capa = JSON.parse(xhr.responseText);
+                allLayers.push(capa);
+                
+                refreshCapas();
+                $('#new-layer').closeModal();
                 Materialize.toast('SHP subido correctamente', 2500);
             } else {
                 Materialize.toast('Error subiendo SHP : ' + xhr.responseText, 2500);
@@ -108,6 +143,35 @@ $('#upload-layer-form').submit(function(e){
 
     xhr.send(fd);
 });
+
+$('body').on('click', '.delete-layer-btn', function(e){
+    e.preventDefault();
+
+    var xhr = new XMLHttpRequest();
+    var self = this;
+    var layerName = $(this).attr('layer-name');
+    console.log(layerName);
+    
+    xhr.open('DELETE', '/admin/layers', true);
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=utf-8');
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4){
+            $(self).find('input').val('');
+            $(self).find('button').attr('disabled', null);
+            if(xhr.status >= 200 && xhr.status < 400){
+                removeLayer($(self).attr('layer-id'));
+                
+                refreshCapas();
+                Materialize.toast('Tabla eliminada correctamente', 2500);
+            } else {
+                Materialize.toast('Error eliminando tabla : ' + xhr.responseText, 2500);
+            }
+        }
+    }
+
+    xhr.send( JSON.stringify({ tableName : layerName }) );
+});
+
 
 
 
@@ -370,190 +434,6 @@ $('body').on('click', '.remove-map-btn', function(e){
     xhr.send( $.param([ {name : 'id_map', value : id_map}, {name : 'id_user', value : id_user} ]) );
 });
 
-/********************************
- ***** FUNCIONES ÚTILES *********
-*********************************/
-function asignarMapa(id_user, id_map){
-
-}
-
-function desasignarMapa(id_user, id_map){
-
-}
-
-function findUser(id_user){
-    return allUsers.reduce(function(a, user){
-        if(user.id == id_user) return user;
-        else return a;
-    }, {});
-}
-
-function findMap(id_map){
-    return allMaps.reduce(function(a, map){
-        if(map.id == id_map) return map;
-        else return a;
-    }, {});
-}
-
-function findLayer(id_layer){
-    return allLayers.reduce(function(a, layer){
-        if(layer.id == id_layer) return layer;
-        return a;
-    }, {});  
-}
-
-function findBaseLayer(id_layer){
-    return allBaseLayers.reduce(function(a, layer){
-        if(layer.id == id_layer) return layer;
-        return a;
-    }, {});    
-}
-
-function findLayers(layerIds){
-    if(!layerIds) return [];
-    return layerIds.map(function(lid){
-        return allLayers.reduce(function(a, l){
-            if(l.id == lid){
-                return l;
-            }
-            return a;
-        });
-    });
-}
-
-function findPerms(id_user, layerIds){
-    if(!layerIds) return [];
-    var user = findUser(id_user);
-    return layerIds.map(function(lid){
-        return (user.layers_rol || []).reduce(function(a, lr){
-            if(lr.id_layer == lid) return lr.rol;
-            return a;
-        }, 'r');
-    })
-}
-
-function findPerm(id_user, id_layer){
-    var user = findUser(id_user);
-    return (user.layers_rol || []).reduce(function(a, lr){
-        if(lr.id_layer == id_layer) return lr.rol;
-        return a;
-    }, 'r');
-}
-
-function removeGroup(user, group){
-    (user.grupos || []).forEach(function(g, idx){
-        if(g == group)
-            user.grupos.splice(idx, 1);
-    });
-}
-
-function addGroup(user, group){
-    if(!user.grupos) user.grupos = [];
-    user.grupos.push(group);
-}
-
-function changeUserLayerRole(user, layerId, rol){
-    user.maps.forEach(function(m){
-        m.layers.forEach(function(l){
-            if(l.id_layer == layerId){
-                l.rol = rol;
-            }
-        });
-    });
-    user.layers_rol.forEach(function(lr){
-        if(lr.id_layer == layerId){
-            lr.rol = rol;
-        }
-    });
-}
-
-
-function appendTabUserDetail(assigned, notAssigned, groups, permisos){
-    $('#user-detail .modal-content')
-    .append(
-        '<div class="row">'+
-            '<div class="col s12">'+
-                '<ul class="tabs">'+
-                    '<li class="tab col s6"><a class="active" href="#mapas-usuario">Mapas</a></li>'+
-                    '<li class="tab col s6"><a href="#assign-mapas">Asignar Mapas</a></li>'+
-                    '<li class="tab col s6"><a href="#grupos">Grupos</a></li>'+
-                    '<li class="tab col s6"><a href="#permisos">Permisos</a></li>'+
-                '</ul>'+
-            '</div>'+
-            '<div id="mapas-usuario" class="col s12">' + assigned + '</div>'+
-            '<div id="assign-mapas" class="col s12">' + notAssigned + '</div>'+
-            '<div id="grupos" class="col s12">' + groups + '</div>'+
-            '<div id="permisos" class="col s12">' + permisos + '</div>'+
-        '</div>'
-    );
-}
-
-function appendUserMapsDetail(selector, user, mapa){
-    $(selector).append(
-        '<li>' + 
-            '<div class="collapsible-header">' + 
-                '<i class="material-icons">map</i>' +
-                '<i style="float: right; pointer : cursor;" class="remove-map-btn red-text material-icons" user-id="' 
-                        + user.id +'" map-id="' + (mapa.id_map || mapa.id) + '">' + 
-                    'remove_circle_outline' +
-                '</i>' 
-                + mapa.name + 
-            '</div>' +
-        '</li>'
-    );
-}
-
-function removeFromList (na, id_map){
-    na.forEach(function(map, idx){
-        if( (map.id || map.id_map) == id_map){
-            na.splice(idx, 1);
-            return;
-        }
-    });
-}
-
-function isLayerIdInList(id_layer, list){
-    for(var i = 0; i < list.length; i++){
-        if(list[i].id_layer == id_layer)
-            return true;
-    }
-    return false;
-}
-
-function setDataTable(selector){
-    var table = $(selector).DataTable({
-        order : [],
-        "columnDefs": [ {
-            "targets": 'no-sort',
-            "orderable": false
-        } ],
-        "language": {
-            "sProcessing":     "Procesando...",
-            "sLengthMenu":     "Mostrar _MENU_ registros",
-            "sZeroRecords":    "No se encontraron resultados",
-            "sEmptyTable":     "Ningún dato disponible en esta tabla",
-            "sInfo":           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-            "sInfoEmpty":      "Mostrando registros del 0 al 0 de un total de 0 registros",
-            "sInfoFiltered":   "(filtrado de un total de _MAX_ registros)",
-            "sInfoPostFix":    "",
-            "sSearch":         "Buscar:",
-            "sUrl":            "",
-            "sInfoThousands":  ",",
-            "sLoadingRecords": "Cargando...",
-            "oPaginate": {
-                "sFirst":    "Primero",
-                "sLast":     "Último",
-                "sNext":     "Siguiente",
-                "sPrevious": "Anterior"
-            },
-            "oAria": {
-            "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-            "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-            }
-        }
-    });
-    $('select').material_select();
-}
 
 /**********************************
  * INICIO *************************
@@ -704,74 +584,6 @@ $('#new-map-default').find('select').change(function(){
     xhr.send('id_map=' + mapId);
 });
 
-function addMap(map_){
-    var map = {
-        id : map_.id,
-        name : map_.name,
-        layers : [],
-        baselayers : []
-    }
-    allMaps.push(map);
-    allUsers.forEach(function(u){
-        u.not_assigned_maps
-            ? u.not_assigned_maps.push(map)
-            : u.not_assigned_maps = [map];
-    });
-
-    $('#mapas-table').find('tbody').append(
-        '<tr>' + 
-             '<td>' + map.id + '</td><td>' + map.name + '</td><td></td><td></td>' + 
-             '<td><i class="green-text edit-map-btn material-icons" map-id="' + map.id + '" style="cursor : pointer;">mode_edit</i></td>' +
-             '<td><i class="red-text delete-map-btn material-icons" map-id="' + map.id + '" style="cursor : pointer;">remove_circle_outline</i></td>' +
-        '</tr>'
-    );
-    $('#new-map-default').find('tbody').append(
-        '<option value="' + map.id + '">' + map.name + '</option>'
-    ).material_select();
-}
-
-function addDefaultMap(mapId){
-    var map = findMap(mapId);
-    allDefaultMaps.push(map);
-    var tr = $('<tr></tr>');
-    ['id', 'name'].forEach(function(k){
-        tr.append(
-            '<td>' + map[k] + '</td>'
-        );
-    });
-    tr.append(
-        '<td><i class="red-text delete-map-default-btn material-icons" map-id="' + map.id + '" style="cursor : pointer;">remove_circle_outline</i></td>'
-    );
-    $('#mapas-default-table').find('tbody').append(tr);
-}
-
-function deleteUsersMap(mapId){
-    allUsers.forEach(function(u){
-        (u.maps || []).forEach(function(m, index){
-            console.log(m, mapId, 'maaap');
-            if(m.id_map == mapId){
-                console.log(m, mapId, 'maaapsii');
-                u.maps.splice(index, 1);
-                return;
-            }
-        });
-
-        (u.not_assigned_maps || []).forEach(function(m, index){
-            if(m.id == mapId){
-                u.not_assigned_maps.splice(index, 1);
-                return;
-            }
-        });
-
-        allMaps.forEach(function(m, index){
-            if(m.id_map == mapId){
-                allMaps.splice(index, 1);
-                return;
-            }          
-        });
-
-    });
-}
 
 $('body').on('click', '.edit-map-btn', function(e){
     var container = $('<div class="row"></div>')
@@ -1012,12 +824,6 @@ $('body').on('click', '#save-order', function(e){
 
 });
 
-function findPositionInOrder(lid, ltype, orderList){
-    return orderList.reduce(function(a, b){
-        if(b.layer_type == ltype && lid === b.id_layer) a = b.position;
-        return a;
-    }, null);
-}
 
 $('.input-group').change(function(e){
     var group = $(this).attr('id');
@@ -1106,3 +912,322 @@ function mobileAndTabletcheck() {
     (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
     return check;
 };
+
+function refreshCapas(){
+    $('#capas_table').DataTable().destroy(true);
+    $('<table id="capas_table" class="display highlight" cellspacing="0" width="100%"><thead></thead><tbody></tbody></table>').insertAfter('#capas .card-panel:first');
+    var tbody = $('#capas_table').find('tbody');
+    var thead = $('#capas_table').find('thead');
+
+    var tr = $('<tr>').appendTo(thead);
+    ['id', 'name', 'oid'].forEach(function(k){
+        $('<th>').html(k).appendTo(tr);
+    });
+    $('<th class="no-sort"><i class="material-icons" style="cursor : default;">remove_circle_outline</i></th>').appendTo(tr);
+
+    allLayers.forEach(function(l){
+        var tr = $('<tr>').appendTo(tbody);
+        ['id', 'name', 'oid'].forEach(function(k){
+            $('<td>').html(l[k]).appendTo(tr);
+        });
+        tr.append(
+            $('<td>').html(
+                '<i layer-id="' + l.id + '" layer-name="' + l.name + '" class="red-text delete-layer-btn material-icons" style="cursor : pointer;">remove_circle_outline</i>'
+            )
+        );
+    });
+    setDataTable('#capas_table');
+}
+
+function refreshCapasBase(){
+    $('#capas_wms_table').DataTable().destroy(true);
+    $('<table id="capas_wms_table" class="display highlight" cellspacing="0" width="100%"><thead></thead><tbody></tbody></table>')
+        .insertAfter('#capas .card-panel:eq(1)');
+    var tbody = $('#capas_wms_table').find('tbody');
+    var thead = $('#capas_wms_table').find('thead');
+
+    var tr = $('<tr>').appendTo(thead);
+    ['id', 'service_url','name'].forEach(function(k){
+        $('<th>').html(k).appendTo(tr);
+    });
+    $('<th class="no-sort"><i class="material-icons" style="cursor : default;">remove_circle_outline</i></th>').appendTo(tr);
+
+    allBaseLayers.forEach(function(l){
+        var tr = $('<tr>').appendTo(tbody);
+        ['id', 'service_url','name'].forEach(function(k){
+            $('<td>').html(l[k]).appendTo(tr);
+        });
+        tr.append(
+            $('<td>').html(
+                '<i baselayer-id="' + l.id + '" class="red-text delete-baselayer-btn material-icons" style="cursor : pointer;">remove_circle_outline</i>'
+            )
+        );
+    });
+    setDataTable('#capas_wms_table');
+}
+
+function findPositionInOrder(lid, ltype, orderList){
+    return orderList.reduce(function(a, b){
+        if(b.layer_type == ltype && lid === b.id_layer) a = b.position;
+        return a;
+    }, null);
+}
+
+
+function addMap(map_){
+    var map = {
+        id : map_.id,
+        name : map_.name,
+        layers : [],
+        baselayers : []
+    }
+    allMaps.push(map);
+    allUsers.forEach(function(u){
+        u.not_assigned_maps
+            ? u.not_assigned_maps.push(map)
+            : u.not_assigned_maps = [map];
+    });
+
+    $('#mapas-table').find('tbody').append(
+        '<tr>' + 
+             '<td>' + map.id + '</td><td>' + map.name + '</td><td></td><td></td>' + 
+             '<td><i class="green-text edit-map-btn material-icons" map-id="' + map.id + '" style="cursor : pointer;">mode_edit</i></td>' +
+             '<td><i class="red-text delete-map-btn material-icons" map-id="' + map.id + '" style="cursor : pointer;">remove_circle_outline</i></td>' +
+        '</tr>'
+    );
+    $('#new-map-default').find('tbody').append(
+        '<option value="' + map.id + '">' + map.name + '</option>'
+    ).material_select();
+}
+
+function addDefaultMap(mapId){
+    var map = findMap(mapId);
+    allDefaultMaps.push(map);
+    var tr = $('<tr></tr>');
+    ['id', 'name'].forEach(function(k){
+        tr.append(
+            '<td>' + map[k] + '</td>'
+        );
+    });
+    tr.append(
+        '<td><i class="red-text delete-map-default-btn material-icons" map-id="' + map.id + '" style="cursor : pointer;">remove_circle_outline</i></td>'
+    );
+    $('#mapas-default-table').find('tbody').append(tr);
+}
+
+function deleteUsersMap(mapId){
+    allUsers.forEach(function(u){
+        (u.maps || []).forEach(function(m, index){
+            console.log(m, mapId, 'maaap');
+            if(m.id_map == mapId){
+                console.log(m, mapId, 'maaapsii');
+                u.maps.splice(index, 1);
+                return;
+            }
+        });
+
+        (u.not_assigned_maps || []).forEach(function(m, index){
+            if(m.id == mapId){
+                u.not_assigned_maps.splice(index, 1);
+                return;
+            }
+        });
+
+        allMaps.forEach(function(m, index){
+            if(m.id_map == mapId){
+                allMaps.splice(index, 1);
+                return;
+            }          
+        });
+
+    });
+}
+
+
+function findUser(id_user){
+    return allUsers.reduce(function(a, user){
+        if(user.id == id_user) return user;
+        else return a;
+    }, {});
+}
+
+function findMap(id_map){
+    return allMaps.reduce(function(a, map){
+        if(map.id == id_map) return map;
+        else return a;
+    }, {});
+}
+
+function findLayer(id_layer){
+    return allLayers.reduce(function(a, layer){
+        if(layer.id == id_layer) return layer;
+        return a;
+    }, {});  
+}
+
+function findBaseLayer(id_layer){
+    return allBaseLayers.reduce(function(a, layer){
+        if(layer.id == id_layer) return layer;
+        return a;
+    }, {});    
+}
+
+function findLayers(layerIds){
+    if(!layerIds) return [];
+    return layerIds.map(function(lid){
+        return allLayers.reduce(function(a, l){
+            if(l.id == lid){
+                return l;
+            }
+            return a;
+        });
+    });
+}
+
+function findPerms(id_user, layerIds){
+    if(!layerIds) return [];
+    var user = findUser(id_user);
+    return layerIds.map(function(lid){
+        return (user.layers_rol || []).reduce(function(a, lr){
+            if(lr.id_layer == lid) return lr.rol;
+            return a;
+        }, 'r');
+    })
+}
+
+function findPerm(id_user, id_layer){
+    var user = findUser(id_user);
+    return (user.layers_rol || []).reduce(function(a, lr){
+        if(lr.id_layer == id_layer) return lr.rol;
+        return a;
+    }, 'r');
+}
+
+function removeLayer(layerId){
+    (allLayers || []).forEach(function(l, idx){
+        if(l.id == layerId)
+            allLayers.splice(idx, 1);
+    });
+}
+
+function removeBaseLayer(layerId){
+    (allBaseLayers || []).forEach(function(l, idx){
+        if(l.id == +layerId)
+            allBaseLayers.splice(idx, 1);
+    });
+}
+
+function removeGroup(user, group){
+    (user.grupos || []).forEach(function(g, idx){
+        if(g == group)
+            user.grupos.splice(idx, 1);
+    });
+}
+
+function addGroup(user, group){
+    if(!user.grupos) user.grupos = [];
+    user.grupos.push(group);
+}
+
+function changeUserLayerRole(user, layerId, rol){
+    user.maps.forEach(function(m){
+        m.layers.forEach(function(l){
+            if(l.id_layer == layerId){
+                l.rol = rol;
+            }
+        });
+    });
+    user.layers_rol.forEach(function(lr){
+        if(lr.id_layer == layerId){
+            lr.rol = rol;
+        }
+    });
+}
+
+
+function appendTabUserDetail(assigned, notAssigned, groups, permisos){
+    $('#user-detail .modal-content')
+    .append(
+        '<div class="row">'+
+            '<div class="col s12">'+
+                '<ul class="tabs">'+
+                    '<li class="tab col s6"><a class="active" href="#mapas-usuario">Mapas</a></li>'+
+                    '<li class="tab col s6"><a href="#assign-mapas">Asignar Mapas</a></li>'+
+                    '<li class="tab col s6"><a href="#grupos">Grupos</a></li>'+
+                    '<li class="tab col s6"><a href="#permisos">Permisos</a></li>'+
+                '</ul>'+
+            '</div>'+
+            '<div id="mapas-usuario" class="col s12">' + assigned + '</div>'+
+            '<div id="assign-mapas" class="col s12">' + notAssigned + '</div>'+
+            '<div id="grupos" class="col s12">' + groups + '</div>'+
+            '<div id="permisos" class="col s12">' + permisos + '</div>'+
+        '</div>'
+    );
+}
+
+function appendUserMapsDetail(selector, user, mapa){
+    $(selector).append(
+        '<li>' + 
+            '<div class="collapsible-header">' + 
+                '<i class="material-icons">map</i>' +
+                '<i style="float: right; pointer : cursor;" class="remove-map-btn red-text material-icons" user-id="' 
+                        + user.id +'" map-id="' + (mapa.id_map || mapa.id) + '">' + 
+                    'remove_circle_outline' +
+                '</i>' 
+                + mapa.name + 
+            '</div>' +
+        '</li>'
+    );
+}
+
+function removeFromList (na, id_map){
+    na.forEach(function(map, idx){
+        if( (map.id || map.id_map) == id_map){
+            na.splice(idx, 1);
+            return;
+        }
+    });
+}
+
+function isLayerIdInList(id_layer, list){
+    for(var i = 0; i < list.length; i++){
+        if(list[i].id_layer == id_layer)
+            return true;
+    }
+    return false;
+}
+
+function setDataTable(selector){
+    var table = $(selector).DataTable({
+        order : [],
+        "columnDefs": [ {
+            "targets": 'no-sort',
+            "orderable": false
+        } ],
+        "language": {
+            "sProcessing":     "Procesando...",
+            "sLengthMenu":     "Mostrar _MENU_ registros",
+            "sZeroRecords":    "No se encontraron resultados",
+            "sEmptyTable":     "Ningún dato disponible en esta tabla",
+            "sInfo":           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+            "sInfoEmpty":      "Mostrando registros del 0 al 0 de un total de 0 registros",
+            "sInfoFiltered":   "(filtrado de un total de _MAX_ registros)",
+            "sInfoPostFix":    "",
+            "sSearch":         "Buscar:",
+            "sUrl":            "",
+            "sInfoThousands":  ",",
+            "sLoadingRecords": "Cargando...",
+            "oPaginate": {
+                "sFirst":    "Primero",
+                "sLast":     "Último",
+                "sNext":     "Siguiente",
+                "sPrevious": "Anterior"
+            },
+            "oAria": {
+            "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
+            "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+            }
+        }
+    });
+    $(selector).parent().find('select').material_select();
+}

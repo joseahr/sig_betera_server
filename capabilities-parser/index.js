@@ -4,7 +4,7 @@ const request = require('request-promise');
 const parse = serviceUrl =>
     request({ url : serviceUrl, method : 'HEAD' })
     .then(headers => {
-        if(headers['content-length'] > 5*1024*1024) 
+        if(!headers['content-length'] || headers['content-length'] > 5*1024*1024) 
             return [];
 
         return request({ url : serviceUrl, method : 'GET' })

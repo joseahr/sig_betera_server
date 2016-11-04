@@ -75,6 +75,7 @@ function MapController(){
     this.map.addControl(new ol.control.MousePositionBetera({ mapController : this }));
     this.map.addControl(new ol.control.SideMenu({ mapController : this }));
     this.mainbar = new ol.control.Bar();
+    OverviewControl(this);
     MeasureControl(this);
     SelectControl(this);
     PerfilControl(this);
@@ -321,4 +322,40 @@ function findPositionInOrder(lid, ltype, orderList){
         if(b.layer_type == ltype && lid === b.id_layer) a = b.position;
         return a;
     }, null);
+}
+
+function OverviewControl(mapController){
+    // New control outside the map (styled)
+    var ov = new ol.control.Overview({	
+        target: $(".overview").get(0),
+        layers: [ortoPNOA],
+        minZoom: 8,
+        maxZoom : 15,
+        view : new ol.View({
+            projection : mapController.projection,
+            zoom 	     : 10,
+            center 	   : [718235.466608, 4385207.688928],
+            maxZoom : 16
+        }),
+        rotation: false,
+        style: [new ol.style.Style({
+            image: new ol.style.Circle({
+                fill: new ol.style.Fill({
+                    color: 'rgba(0,255,102, 1)'
+                }),
+                stroke: new ol.style.Stroke({
+                    width: 7,
+                    color: 'rgba(0,255,102, 0.8)'
+                }),
+                radius: 5
+            }),
+            stroke: new ol.style.Stroke({
+                width: 3,
+                color: "rgba(0,255,102,1)",
+                lineDash: [5, 5]
+            })
+        })]
+    });
+    ov.setView(mapController.map.getView());
+    mapController.map.addControl(ov);
 }

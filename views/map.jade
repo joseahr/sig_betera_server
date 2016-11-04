@@ -37,12 +37,14 @@ block content
 
 			li
 				a(href='/') Inicio
+					i.red-text.left.indigo-text.material-icons home
 			li
 				.divider
 			if user
 				if user.rol == 'admin'
 					li
 						a.waves-effect(href='/admin') Panel de Administador
+							i.red-text.left.indigo-text.material-icons dashboard
 					li
 						.divider
 			li.no-padding
@@ -50,8 +52,14 @@ block content
 					li
 						a.collapsible-header
 							| Mapas
+							i.red-text.left.indigo-text.material-icons maps
 							i.material-icons(style="float : right; margin : 0px;") arrow_drop_down
 						.collapsible-body#layerSwitcher
+			li
+				.divider
+			li
+				a#add-wms-btn(href='#') Añadir Servicio WMS
+					i.red-text.left.indigo-text.material-icons note_add
 			li
 				.divider
 			li.no-padding
@@ -59,6 +67,7 @@ block content
 					li
 						a.collapsible-header
 							| Imprimir mapa
+							i.red-text.left.indigo-text.material-icons print
 							i.material-icons(style="float : right; margin : 0px;") arrow_drop_down
 						.collapsible-body
 							ul
@@ -68,6 +77,17 @@ block content
 									a(id="export-png" href="#" download="mapa.png") PNG
 								li
 									a(id="export-pdf" href="#" download="mapa.pdf") PDF
+			li
+				.divider
+			li.no-padding
+				ul.collapsible.collapsible-accordion
+					li.active
+						a.collapsible-header.active
+							| Miniatura
+							i.red-text.left.indigo-text.material-icons web_asset
+							i.material-icons(style="float : right; margin : 0px;") arrow_drop_down
+						.collapsible-body(style="display : inline !important")
+							.overview.col.s12(style="max-height : 200px; height : 200px; margin : 0.2em;")
 			li
 				.divider
 			if user
@@ -93,6 +113,27 @@ block content
 			h4.flow-text.white-text.text-darken-2(style="margin : 0px") Información
 		.modal-content(style="padding : 0px; overflow-x : hidden;")
 		.modal-footer.grey.lighten-2
+	#modal-wms.modal.modal-fixed-footer
+		.modal-header.card-panel.indigo.white-text(style="pointer : default !important; margin-top : 0px;") Nueva Conexión WMS
+		.modal-content.row
+			form#get-layers-wms-form(action='#' enctype="multipart/form-data")
+				.row
+					.input-field.col.s12
+						input#url_servicio.validate(placeholder='Url del servicio', type='text')
+						label(for='first_name') Url del servicio
+				.col.s6.offset-s3
+					button.btn.waves-effect.waves-light(name="action" type="submit") Obtener Capas
+						i.material-icons.right send
+			form#add-wms-form(action="#")
+				.input-field.col.s12(style="margin-top : 30px;")
+					select#select-capas-wms(multiple='')
+						option(selected="" disabled="" value="") Elige capas a añadir
+					label Capas del servicio
+				.col.s6.offset-s3
+					button.btn.waves-effect.waves-light(name="action" type="submit" disabled="") Añadir Servicio WMS
+						i.material-icons.right send
+		.modal-footer
+			a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cerrar
 block script
 	// jQuery
 	script(src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous")
@@ -119,6 +160,8 @@ block script
 	//proj4js
 	script(src="/javascripts/proj4js/dist/proj4.js")
 	// ol-utils
+	// layers ol-utils
+	script(src="/javascripts/ol-utils/layers.js")
 	script(src="/javascripts/ol-utils/controls/mouse-position.js")
 	script(src="/javascripts/ol-utils/controls/side-menu.js")
 	script(src="/javascripts/ol-utils/controls/modal.js")
@@ -126,7 +169,7 @@ block script
 	script(src="/javascripts/ol-utils/controls/perfil.js")
 	script(src="/javascripts/ol-utils/controls/select-control.js")
 	script(src="/javascripts/ol-utils/controls/gps.js")
-	script(src="/javascripts/ol-utils/layers.js")
+
 	script(src="/javascripts/ol-utils/map-controller.js")
 	//script(src="/javascripts/ol-utils/projs.js")
 	//script(src="/javascripts/ol-utils/map.js")
@@ -145,4 +188,65 @@ block script
 					Materialize.toast('Error al cerrar sesión');
 			}
 			xhr.send();
+		});
+
+		$('#add-wms-btn').click(function(e){
+			$('#modal-wms').openModal();
+		})
+
+		$('#add-wms-form').submit(function(e){
+			e.preventDefault();
+			var url = $('#url_servicio').val();
+			var selectedLayers = [];
+
+			$('#select-capas-wms').find('option:selected').each(function(i){
+				if($(this).val()) selectedLayers.push($(this).val());
+			});
+			selectedLayers = selectedLayers.join();
+
+			mapController.map.getLayers().forEach(function(l){
+				console.log(l.get('defaultLayers'))
+				if(l.get('defaultLayers')){
+					var tile = new Tile({
+						service_url : url.split('?')[0],
+						layers : selectedLayers,
+						name : selectedLayers
+					});
+					l.getLayers().extend([tile]);
+				}
+			});
+			$('#modal-wms').closeModal();
+		});
+
+		$('#get-layers-wms-form').submit(function(e){
+			e.preventDefault();
+			var xhr = new XMLHttpRequest();
+			var self = this;
+			$(this).find('button').attr('disabled', 'disabled');
+			xhr.open('POST', '/usuarios/capas/wms/getCapabilities', true);
+			xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState == 4){
+					$(self).find('button').attr('disabled', null);
+					if(xhr.status >= 200 && xhr.status < 400){
+						var layers = JSON.parse(xhr.responseText);
+						console.log(layers);
+						console.log($('#add-wms-form').find('select'));
+						$('#add-wms-form').find('select')
+							.empty()
+							.append( $('<option>').attr('value', '').attr('disabled', '').attr('selected', '').html('Elige capas a añadir') ).material_select();
+						layers.forEach(function(l){
+							$('#add-wms-form').find('select').append( $('<option>').attr('value', l['Name']).html(l['Name']) ).material_select();
+						});
+						$('#add-wms-form').find('button').attr('disabled', null);
+						Materialize.toast('Capas obtenidas correctamente', 2500);
+					} else {
+						$('#add-wms-form').find('select').empty().material_select();
+						$('#add-wms-form').find('button').attr('disabled', '');
+						Materialize.toast('Error obteniendo capas : ' + xhr.responseText, 2500);
+					}
+				}
+			}
+			console.log($('#url_servicio').val());
+			xhr.send('service_url=' + encodeURIComponent($('#url_servicio').val()));
 		});

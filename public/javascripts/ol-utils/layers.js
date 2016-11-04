@@ -7,7 +7,8 @@ function Tile(opts){
         source : new ol.source.TileWMS({
             url : opts.service_url,
             gutter : options.gutter <= 0 ? 0 : 250,
-            crossOrigin: options.crossOrigin || 'anonymous', // Configurar Geoserver para orígenes remotos primero
+            //crossOrigin: options.crossOrigin || 'anonymous', // Configurar Geoserver para orígenes remotos primero
+            //crossOrigin : 'anonymous',
             params: {
                 'FORMAT': 'image/png', 
                 'VERSION': '1.1.1',
