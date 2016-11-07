@@ -50,6 +50,8 @@ module.exports = (rep, pgp) => {
             return Promise.all(promises)
             .then(listOfMaps =>{
                 let mapIds = [];
+                (listOfMaps[0] || []).forEach(el => { el.default = true; return el; });
+                console.log(listOfMaps[0], 'listOfMaps0');
                 listOfMaps = [...(listOfMaps[1] || []), ...(listOfMaps[0] || [])];
                 listOfMaps = listOfMaps.reduce( (list, el)=>{
                     if(mapIds.indexOf(el.id) == -1){
@@ -62,7 +64,6 @@ module.exports = (rep, pgp) => {
                 console.log(listOfMaps);
                 if(!listOfMaps) return Promise.resolve(null);
                 return rep.tx( t =>{
-
                     return t.batch(listOfMaps.map( m => m.id ).map(this.getLayers))
                 })
                 .then(mapLayers =>{
@@ -78,6 +79,7 @@ module.exports = (rep, pgp) => {
                                 , orden : map.orden
                                 , visible : map.visible
                             };
+                            if(map.default) obj['default'] = true;
                             obj['mapbaselayerIds'] = mapBaseLayers[idx] 
                                 ? mapBaseLayers[idx] 
                                 : [];

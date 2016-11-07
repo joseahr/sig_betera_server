@@ -1,7 +1,7 @@
 ol.control.SideMenu = function(opts){
     var self = this;
     var sideMenuOpened = false;
-    var element = $('<a href="#" data-tooltip="Menú" data-delay="50" data-position="top">')
+    var element = $('<a id="#close-side-nav-map" href="#" data-tooltip="Menú" data-delay="50" data-position="top">')
         .addClass('card-panel collection row tooltiped valign-wrapper')
         .css('position', 'absolute')
         .css('background', 'rgba(0,0,0,0)')
@@ -20,11 +20,11 @@ ol.control.SideMenu = function(opts){
         element : element.get(0)
     });
 
-    this.opened = opts.mapController.mobileAndTabletcheck()
-        ? false
-        : true;
+    this.opened = !opts.mapController.mobileAndTabletcheck();
     this.opened 
         ? icon.addClass('red-text').removeClass('indigo-text') : null;
+    this.opened
+        ? icon.html('arrow_back') : icon.html('arrow_forward');
 
     element.bind('click', function(e){
         e.preventDefault();

@@ -6,7 +6,10 @@ const mailer = require('../mailer');
 
 const db = require('../db').db;
 
+const recaptcha = require('../recaptcha');
+
 router.post('/login', (req, res)=>{
+  
   console.log(req.body.username, req.body.password);
   // Comprobamos que req.body.username && req.body.password existan
   if(!req.body.username || !req.body.password)
@@ -30,8 +33,11 @@ router.post('/login', (req, res)=>{
   })(req, res);
 });
 
-router.post('/signup', (req, res)=>{
+router.post('/signup', recaptcha.middleware.verify, (req, res)=>{
   console.log(req.body);
+
+  if (req.recaptcha.error) return res.status(500).json('No has verificado el re-captcha');
+
   let { name, password, repassword, nombre, apellidos, email } = req.body;
   console.log({ name, password, repassword, nombre, apellidos, email });
   // Comprobamos que req.body.username && req.body.password existan
@@ -55,7 +61,7 @@ router.get('/logout', (req, res)=>{
   if(!req.user)
     return res.status(404).json('No hay usuario en la sesión');
   req.logout();
-  res.status(200).json('Cerraste sesión');
+  res.redirect('/');
 });
 
 router.get('/validar/:token', (req, res)=>{

@@ -4,11 +4,13 @@ const router    = express.Router();
 const capabilitiesParser = require('../capabilities-parser');
 const db = require('../db').db;
 
-router.route('/byGeom')
+router.route('/features/byGeom')
 .post( (req, res)=>{
+    console.log('byGeom');
     if(!req.body.wkt) return res.status(500).json('Debe enviar una extensión, área o punto.');
     if(!req.body.layers || !req.body.layers.length) return res.status(500).json('Debe enviar al menos una capa en la que buscar.');
     if(typeof req.body.layers === 'string') req.body.layers = req.body.layers.split(',');
+
     db.users.layers.getFeaturesIntersecting(req.body.wkt, ...req.body.layers)
     .then(result => res.status(200).json(result) )
     .catch(err => res.status(500).json('Hubo un error durante la búsqueda.') );
@@ -25,7 +27,7 @@ router
         res.status(200).json(layers);
     })
     .catch(err => res.status(500).json('eeer' + err));
-})
+});
 
 router
 .route('/:id_layer')

@@ -163,7 +163,7 @@ MapController.prototype.addLayer = function(capa, group){
     }
     // Añadimos la capa a la lista de capas
     var wms = Tile({ 
-        service_url : 'http://www.sig.betera.es:8080/geoserver/betera/wms', 
+        service_url : 'http://sig.betera.es:8080/geoserver/betera/wms', 
         layers : capa.layerName.name, 
         name : capa.layerName.name,
         crossOrigin : 'anonymous'  
@@ -200,11 +200,13 @@ MapController.prototype.loadMaps = function(){
     .then(function(listOfMaps){
         // Recorremos la lista de mapas con reduce
         //console.log(listOfMaps, 'lisst');
+        var visibleMap = false;
         return Bluebird.all(
             listOfMaps.map(function(mapa, index, arr){
                 // Creamos un grupo de capas
                 // que contendrá todas las capas del mapa
                 //console.log('mapa'. mapa);
+                if(mapa.visible) visibleMap = true;
                 console.log(mapa);
                 var capas = [];
                 var orden = mapa.orden;
@@ -215,7 +217,7 @@ MapController.prototype.loadMaps = function(){
                         ? true
                         : mapa.visible === false 
                         ? false 
-                        : ( index == arr.length - 1)
+                        : !visibleMap && ( index == arr.length - 1)
                 });
                 // Añadimos el grupo al mapa
                 self.map.addLayer(groupCapasMap);
@@ -341,17 +343,17 @@ function OverviewControl(mapController){
         style: [new ol.style.Style({
             image: new ol.style.Circle({
                 fill: new ol.style.Fill({
-                    color: 'rgba(0,255,102, 1)'
+                    color: 'rgba(63,81,181, 0.8)'
                 }),
                 stroke: new ol.style.Stroke({
                     width: 7,
-                    color: 'rgba(0,255,102, 0.8)'
+                    color: 'rgba(63,81,181)'
                 }),
                 radius: 5
             }),
             stroke: new ol.style.Stroke({
                 width: 3,
-                color: "rgba(0,255,102,1)",
+                color: "rgba(63,81,181, 0.9) ",
                 lineDash: [5, 5]
             })
         })]

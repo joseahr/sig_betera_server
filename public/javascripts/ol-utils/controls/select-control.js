@@ -42,7 +42,7 @@ var modalSelect = new ModalBetera('#modal-feature', {
     }
 });
 
-var modalSelectDisp = modalSelect.getDisparador()
+var modalSelectDisp = modalSelect.getDisparador();
 
 function SelectControl(mapController){
 
@@ -56,6 +56,12 @@ function SelectControl(mapController){
         name : 'select',
         html: '<i class="material-icons">info_outline</i>',
         onToggle : function(){
+
+            featuresSelectSubBar.getControls().forEach(function(c){
+                $(c.element).find('i').css('color', 'rgba(0, 60, 136, 0.5)');
+                c.setActive(false);
+            });
+
             mapController.sourceSelectedFeatures.clear();
             map.getTargetElement().style.cursor = 'auto';
             map.unByKey(listener);
@@ -200,12 +206,12 @@ function handleGetInfo(wkt){
         if(l.getVisible() && l.get('layers') && l.get('mapa'))
             l.getLayers().forEach(function(ll){
                 console.log(ll.getSource().getUrls(), ll instanceof ol.layer.Tile, ll.getUrl, ll.geUrls );
-                if(ll.getVisible() && ll.getSource().getUrls()[0] == 'http://www.sig.betera.es:8080/geoserver/betera/wms') selectedLayers.push(ll.get('name'));
+                if(ll.getVisible() && ll.getSource().getUrls()[0] == 'http://sig.betera.es:8080/geoserver/betera/wms') selectedLayers.push(ll.get('name'));
             })
     });
     console.log(selectedLayers);
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/usuarios/capas/byGeom', true);
+    xhr.open('POST', '/usuarios/capas/features/byGeom', true);
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xhr.onreadystatechange = function(){
         if(xhr.readyState == 4){

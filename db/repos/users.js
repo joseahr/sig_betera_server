@@ -17,6 +17,10 @@ module.exports = (rep, pgp) => {
 
     return {
 
+        setVisibleMap : (id_user, id_map) =>
+            rep.none("UPDATE User_Maps SET visible = true WHERE id_map = '${id_map#}' AND id_user = '${id_user#}'", 
+                {id_user, id_map}),
+
         deleteForgetToken : id_user =>
             rep.none("DELETE FROM users_change_password_token WHERE id = '${id_user#}'", {id_user}),
 

@@ -9,32 +9,63 @@ block link
 	link(href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet")
 	// Custom Css
 	link(rel="stylesheet" href="/stylesheets/style.css")
+	script(src="https://cdnjs.cloudflare.com/ajax/libs/prefixfree/1.0.7/prefixfree.min.js")
 block header
+	style.
+		@media only screen and (min-width: 601px) {
+			#slide-out{
+				margin-top: 64px;
+			}
+		}
+		@media only screen and (max-width: 600px) {
+			#slide-out{
+				margin-top: 56px;
+			}
+		}
+		.select-dropdown{
+			border-bottom : 1px solid #fff !important;
+		}
 	head
 		.navbar-fixed
 			nav.blue.darken-3
 				.container
 					.nav-wrapper
-						h4.brand-logo(style="margin-left : 10px;") SIG Bétera
-						a.left
-							img(src="/images/betera-logo.png" style="max-height : 60px;")
-						ul.left.hide-on-large-only(style="padding-right : 10px;")
+						ul.left.hide-on-large-only(style="")
 							li
 								a#menu-mobile.button-collapse(href="#" data-activates="slide-out")
 									i.material-icons menu
+						ul.left
+							li.hide-on-med-and-down
+								a(href="#")
+									img.left(src="/images/betera-logo.png" style="max-height : 60px; margin-right : 10px;")
+							li
+								a(href="#")
+									h4 SIG Bétera
 						ul.right
 							li.hide-on-med-and-down
 								a(href="/visor") Visor
+							li.hide-on-med-and-down
+								a(href="#descargas-section") Descargas
+							li.hide-on-med-and-down
+								a(href="#servicios-section") Servicios								
 							if !user
 								li.hide-on-med-and-down
 									a.new-user-btn(href='#') Registrarse
 								li.hide-on-med-and-down
 									a.forgot-password-btn(href='#') ¿Olvidaste Contraseña?
 							if user
-								li.hide-on-med-and-down
-									a.truncate
+								li.hide-on-med-and-down(style="width : 200px")
+									a.truncate.dd.dropdown-button(href='#' data-activates='dropdown1')
 										i.material-icons.left.white-text person
 										| #{user.name}
+									ul#dropdown1.dropdown-content(style="margin-top : 64px; width : 200px")
+										li
+											a(href='#!') Opciones
+										li.divider
+										li
+											a(href='/usuarios/logout')
+												| Cerrar Sesión
+												i.material-icons.left.red-text exit_to_app
 block content
 	ul#slide-out.side-nav(style="z-index : 1000;")
 		li(style="background : url('http://www.betera.com/wp-content/uploads/policia-local-31.jpg'); background-size : 150%;")
@@ -46,14 +77,42 @@ block content
 						span.black-text.name #{user.name}
 					a(href='#!email')
 						span.black-text.email #{user.email}
-				else
-					a()
-						span.black-text.name Usuario Invitado
-
+		li
+			a(href='/') Inicio
+				i.left.indigo-text.material-icons home
+		li
+			.divider
+		li
+			a(href='/visor') Visor
+				i.left.indigo-text.material-icons maps
+		li
+			.divider
+		li
+			a(href='#descargas-section') Descargas
+				i.left.indigo-text.material-icons file_download
+		li
+			.divider
+		li
+			a(href='#servicios-section') Servicios
+				i.left.indigo-text.material-icons file_download
+		li
+			.divider
+		if !user
+			li
+				a.new-user-btn(href='#') Registrarse
+					i.left.indigo-text.material-icons home
+			li
+				.divider
+			li
+				a.forgot-password-btn(href='#') ¿Olvidaste Contraseña?
+					i.left.indigo-text.material-icons home
+			li
+				.divider
 	#modal-forgot.modal.modal-fixed-footer
 		.modal-header
 			.card-panel.indigo.lighten-2.white-text(style="margin-top : 0px; height : 4em") ¿Olvidaste Contraseña?
 				i.material-icons.left vpn_key
+		.modal-content
 			.row(style="margin-bottom : 3.5em;")
 				form#forgot-form.col.s12(action="/usuarios/password", method = "POST" )
 					.row
@@ -66,10 +125,11 @@ block content
 							i.material-icons.right send
 		.modal-footer
 			a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cancelar
-	#modal-registro.modal.modal-fixed-footer
+	#modal-registro.modal(style="height : 85% !important;")
 		.modal-header
 			.card-panel.indigo.lighten-2.white-text(style="margin-top : 0px; height : 4em") Nuevo Usuario
 				i.material-icons.left person_add
+		.modal-content
 			.row(style="margin-bottom : 3.5em;")
 				form#registro-form.col.s12(action="/usuarios/signup", method = "POST" )
 					.row
@@ -96,31 +156,31 @@ block content
 							input#repassword.validate(placeholder='Repita clave de acceso', type='password' name="repassword" )
 							label(for='repassword-form') Repetir clave de acceso
 					.row
+						#recaptcha-registro.g-recaptcha(data-sitekey="6LfjRAsUAAAAAEav71yglI9Mntr_z5faCBs3QTyw")
+					.row
 						button#submit-signup.col.s12.waves-effect.waves-light.waves-green.btn-large(type="submit" style="z-index : 0") Registrarse
 							i.material-icons.right send
 		.modal-footer
 			a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Cancelar
-	.parallax-container
-		.parallax
-			img(src="/images/betera-fondo-1.jpg" style="display : block; transform: translate3d(-60%, 0px, 0px); opacity : 0.7; ")
-	.section.white
-		.row.container.valign-wrapper
-			.col.s6.valign(style="height : 100px; background-image : url('/images/betera-logo.png'); background-size : contain; background-repeat : no-repeat;background-position : 50%;")
-			.col.s6.valign
-				h2.center-align.blue-text.lighten-3 SIG Bétera
+	.parallax-container(style="z-index:-1;")
+		.parallax.valign-wrapper
+			img.grayscale(style ="background : url('/images/betera-fondo-1.jpg'); height : 250%; display : block; transform: translate3d(-30%, 0px, 0px); opacity : 0.7; background-position : 0px 0px; background-size : cover;")
+			.row.container.valign.valign-wrapper.valign.object-non-visible.hoverable(data-animation-effect="flipInX" style="z-index : 1;background : rgba(255, 255, 255, 0.3); border-radius : 10px;")
+				.col.s6.valign.object-non-visible(data-animation-effect="bounceInLeft" style="height : 100px; background-image : url('/images/betera-logo.png'); background-size : contain; background-repeat : no-repeat;background-position : center center;")
+				.col.s6.valign.object-non-visible(data-animation-effect="bounceInRight")
+					h2.center-align.indigo-text.lighten-1 SIG Bétera
+	.section.white.hoverable
 		if user
-			.row.container.blue.lighten-3
-				.slider.object-non-visible(data-animation-effect="bounceInLeft")
-					ul.slides
-						li
-							img(src='http://lorempixel.com/580/250/nature/1')
-							// random image
-							.caption.center-align
-								h3 This is our big Tagline!
-								h5.light.grey-text.text-lighten-3 Here's our small slogan.
+			.row.container.blue.lighten-3.object-non-visible(data-animation-effect="fadeIn")
+				.col.s6
+					.card-panel.indigo.white-text Mapas Asignados
+					.row(style="margin-bottom : 3.5em;")
+				.col.s6
+					.card-panel.indigo.white-text Notificaciones
+					.row(style="margin-bottom : 3.5em;")
 		else
-			.row.container.blue.lighten-3
-				.col.s12.m12.l6
+			.row.container.blue.lighten-3.object-non-visible(data-animation-effect="fadeIn")
+				.col.s12.m12.l6.object-non-visible(data-animation-effect="bounceInLeft")
 					.card-panel.indigo.darken-3
 						p.flow-text.center-align.white-text.darken-3 Visualizador Público
 					.row.card-panel.hoverable.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em; padding : 10px;")
@@ -131,7 +191,7 @@ block content
 						a.waves-effect.waves-light.btn(style="margin : 0px auto" href="/visor")
 							i.material-icons.right call_made
 							| Acceder
-				.col.s12.m12.l6
+				.col.s12.m12.l6.object-non-visible(data-animation-effect="bounceInRight")
 					.card-panel.indigo.darken-3
 						p.flow-text.center-align.white-text.darken-3 Visualizador Restringido
 					.row.card-panel.hoverable.white.darken-2(style="margin-left : 0.75em; margin-right : 0.75em; padding : 10px;")
@@ -149,31 +209,99 @@ block content
 						a#submit-login.waves-effect.waves-light.btn(style="margin : 0px auto")
 							i.material-icons.right send
 							| Iniciar Sesión
-	.parallax-container
+	.parallax-container(style="z-index:-1;")
 		.parallax.valign-wrapper
-			img(src="/images/betera-fondo-2.jpg" style="display : block; transform: translate3d(-50%, 385px, 0px); z-index : -1; opacity : 0.7; ")
-			i.valign.material-icons.blue-text.lighten-1.object-non-visible(style="font-size : 20em; margin : 0px auto; " data-animation-effect="bounceInDown") cloud_download
-	.section.white
-		.row.container.blue.lighten-3
-			.slider
+			img.grayscale(style ="background : url('/images/betera-fondo-1.jpg'); height : 250%; display : block; transform: translate3d(-30%, 0px, 0px); opacity : 0.7; background-position : 0px 60%; background-repeat : no-repeat; background-size : cover;")
+			i.valign.material-icons.indigo-text.darken-3.object-non-visible(style="z-index : 1; font-size : 8em; margin : 0px auto;" data-animation-effect="bounceInDown") cloud_download
+			i.valign.material-icons.blue-text.darken-3.object-non-visible(style="z-index : 0; font-size : 8em; margin : 0px auto;" data-animation-effect="flipInY") settings
+			i.valign.material-icons.white-text.darken-3.object-non-visible(style="z-index : 1; font-size : 8em; margin : 0px auto;" data-animation-effect="bounceInUp") language
+	.section.white.hoverable
+		#descargas-section.row.container.object-non-visible(data-animation-effect="zoomInDown")
+			h4.black-text.left #
+			h4.indigo-text.right Descargas
+		.row.container.blue.lighten-3.object-non-visible(data-animation-effect="zoomIn" style="padding-bottom : 20px; z-index : 1;")
+			.slider.indigo
 				ul.slides
-					li
-						img(src='http://lorempixel.com/580/250/nature/1')
-						// random image
+					li.blue
+						img.lighten-1.blue
 						.caption.center-align
-							h3 This is our big Tagline!
-							h5.light.grey-text.text-lighten-3 Here's our small slogan.
-	.parallax-container
+							h3 Descarga las capas de nuestro repositorio
+							h5.light.grey-text.text-lighten-3 Catastro histórico, Puntos de Interés, ...
+					li.blue
+						img.lighten-1.indigo
+						.caption.center-align
+							h3 Elige el formato que deseas para descargar la capa
+							h5.light.grey-text.text-lighten-3 SHP, GML, GeoJSON, KML y CSV
+			.col.s12.center-align
+				.col.s12
+					p.white-text Elige capa para descargar
+					.input-field
+						select#capa-descargar-select.indigo-text
+							each layer in allLayers
+								option(value="#{layer.name}") #{layer.name}
+				.col.s12
+					p.white-text Elige formato
+					.input-field
+						select#formato-capa-select.indigo-text
+							option(value="SHAPE-ZIP") SHP
+							option(value="text/xml; subtype=gml/2.1.2") GML2
+							option(value="gml3") GML3.1
+							option(value="application/gml+xml; version=3.2") GML3.2
+							option(value="application/json") GeoJSON
+							option(value="application/vnd.google-earth.kml+xml") KML
+							option(value="csv") CSV
+			.col.s12.center-align
+				.col.s12
+					a#download-capa.waves-effect.waves-light.btn(href="#" style="margin : 0px auto") Descargar 
+						i.material-icons.right file_download
+		#servicios-section.row.container.object-non-visible(data-animation-effect="zoomInDown" style="z-index : 0;")
+			h4.black-text.left #
+			h4.indigo-text.right Servicios
+		.row.container.blue.lighten-3.object-non-visible(data-animation-effect="zoomIn" style="padding-bottom : 20px; z-index : 0;")
+			.slider.indigo
+				ul.slides
+					li.blue
+						img.lighten-1.blue
+						.caption.center-align
+							h3 Servicio WMS
+							h5.light.grey-text.text-lighten-3 Accede a toda la información del servicio de visualización.
+							a.blue.white-text.waves-effect.waves-green.btn-flat(target="_blank" href='http://localhost:8080/geoserver/betera/wms?request=GetCapabilities&service=WMS') Pincha aquí
+					li.blue
+						img.lighten-1.indigo
+						.caption.center-align
+							h3 Servicio WFS
+							h5.light.grey-text.text-lighten-3 Accede a toda la información de nuestro servicio de descargas.
+							a.indigo.white-text.waves-effect.waves-green.btn-flat(target="_blank" href='http://localhost:8080/geoserver/betera/wms?request=GetCapabilities&service=WFS') Pincha aquí
+						
+	.parallax-container(style="z-index:-1;")
 		.parallax
-			img(src="/images/betera-fondo-3.jpg" style="display : block; transform: translate3d(-50%, 385px, 0px); opacity : 0.7; ")
-	footer.page-footer.blue.darken-3
+			img.grayscale(style ="background : url('/images/betera-fondo-1.jpg'); height : 250%; display : block; transform: translate3d(-30%, 0px, 0px); opacity : 0.7; background-repeat : no-repeat;background-position : 0px 210%;background-size : cover")
+	footer.hoverable.page-footer.blue.darken-3(style="margin-top : 0px;")
 		.container
 			.row
 				.col.l6.s12
-					h5.white-text Footer Content
-					p.grey-text.text-lighten-4 You can use rows and columns here to organize your footer content.
+					h5.white-text Contacto
+					.row
+						form#form-contacto.col.s12(method='POST' action="/contacto")
+							.row
+								.input-field.col.s12
+									input.validate(type='email' name="email")
+									label.white-text(for='icon_prefix') Tu email
+							.row
+								.input-field.col.s12
+									input.validate(type='text' name="subject")
+									label.white-text(for='icon_prefix') Título
+							.row
+								.input-field.col.s12
+									textarea.materialize-textarea(name="message")
+									label.white-text(for='textarea1') Mensaje
+							.row
+								#recaptcha-contacto.g-recaptcha(data-sitekey="6LfjRAsUAAAAAEav71yglI9Mntr_z5faCBs3QTyw")
+							.row
+								button#submit-contacto-btn.col.s12.waves-effect.waves-light.waves-green.btn-large(type="submit" style="z-index : 0") Enviar
+									i.material-icons.right send
 				.col.l4.offset-l2.s12
-					h5.white-text Links
+					h5.white-text Enlaces de Interés
 					ul
 						li
 							a.grey-text.text-lighten-3(href='http://www.betera.es' target="_blank") http://www.betera.es
@@ -198,7 +326,46 @@ block script
 	script(type='text/javascript', src='/javascripts/layout.js')
 	// MaterializeCSS (Google)
 	script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js")
+	// Recaptcha
+	script(src='https://www.google.com/recaptcha/api.js?onload=CaptchaCallback&render=explicit', async='', defer='')
 	script.
+		var user = '!{JSON.stringify(user)}' || '{}';
+			user = JSON.parse(user);
+
+		var CaptchaCallback = function() {
+			var idReg = grecaptcha.render('recaptcha-registro', {'sitekey' : '6LfjRAsUAAAAAEav71yglI9Mntr_z5faCBs3QTyw'});
+			var idCont = grecaptcha.render('recaptcha-contacto', {'sitekey' : '6LfjRAsUAAAAAEav71yglI9Mntr_z5faCBs3QTyw'});
+			$('#recaptcha-registro').attr('recaptcha-id', idReg);
+			$('#recaptcha-contacto').attr('recaptcha-id', idCont);
+		};
+
+		function downloadCapa(capa, format){
+			window.open('http://localhost:8080/geoserver/betera/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=betera:' + capa + '&outputFormat=' + format);
+		}
+
+		$('#download-capa').click(function(e){
+			e.preventDefault();
+			var capa = $('#capa-descargar-select').find('option:selected').val();
+			var formato = $('#formato-capa-select').find('option:selected').val();
+			downloadCapa(capa, formato);
+		});
+
+		if(typeof user == 'object' && user.id){
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET', '/usuarios/mapas', true);
+			xhr.setRequestHeader('Content-Type', 'application/json');
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState === 4){
+					console.log(JSON.parse(xhr.responseText));
+					if(xhr.status >= 200 && xhr.status < 400){
+						
+					} else {
+
+					}
+				}
+			}
+			xhr.send();
+		}
 		$('input').val('');
 		$('form').trigger('reset');
 		$('.button-collapse').sideNav();
@@ -209,12 +376,15 @@ block script
 		$('.parallax').parallax();
 
 		$('.slider').slider();
+		$('select').material_select();
 		
 		$('#login').keyup(onEnterKeyLoginForm);
 
 		$('#login').submit(onSubmitLogin);
 
 		$('#modal-forgot').submit(onSubmitForgot);
+
+		$('#form-contacto').submit(onSubmitContacto);
 
 		$('#submit-login').bind('click', function(){ $('#login').submit(); })
 
@@ -232,6 +402,31 @@ block script
 			if(e.which == 13){
 				$('#login').submit();
 			}
+		}
+
+		function onSubmitContacto(e){
+			e.preventDefault();
+			$(this).find('.btn').attr('disabled', 'disabled');
+			var self = this;
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', '/contacto', false);
+			xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState === 4){
+					$(self).find('.btn').attr('disabled', null);
+
+					grecaptcha.reset(+$('#recaptcha-contacto').attr('recaptcha-id'));
+					if(xhr.status < 400){
+						Materialize.toast('e-mail enviado correctamente', 2500);
+						$(self).find('input, textarea').val('');
+					}
+					else {
+						Materialize.toast('Error : ' + xhr.responseText, 3500);
+					}
+				}
+			}
+
+			xhr.send($(this).serialize());
 		}
 
 		function onSubmitForgot(e){
@@ -269,7 +464,7 @@ block script
 				if(xhr.readyState === 4){
 					$('#submit-login').attr('disabled', null);
 					if(xhr.status < 400){
-						window.location.href = '/visor';
+						window.location.replace('/')
 					}
 					else {
 						Materialize.toast('Error de autenticación : ' + xhr.responseText, 3500);
@@ -293,6 +488,7 @@ block script
 			xhr.onreadystatechange = function(){
 				if(xhr.readyState === 4){
 					$('#submit-signup').attr('disabled', null);
+					grecaptcha.reset(+$('#recaptcha-registro').attr('recaptcha-id'));
 					if(xhr.status < 400){
 						$('#modal-registro').closeModal();
 						Materialize.toast('¡Usuario creado con éxito, revisa tu correo para finalizar el registro!', 2500);
@@ -305,3 +501,13 @@ block script
 
 			xhr.send( $(this).serialize() );
 		}
+
+		$('.dd').dropdown({
+			inDuration: 300,
+			outDuration: 225,
+			constrain_width: false, // Does not change width of dropdown to that of the activator
+			hover: true, // Activate on hover
+			gutter: 0, // Spacing from edge
+			belowOrigin: true, // Displays dropdown below the button
+			alignment: 'left' // Displays dropdown with edge aligned to the left of button
+		});
